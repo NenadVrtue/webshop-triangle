@@ -11,6 +11,7 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function Dashboard() {
+    console.log("Dashboard komponenta se renderuje!");
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
