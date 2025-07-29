@@ -10,10 +10,19 @@ use Illuminate\Http\Request;
 
 class TireController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Tire::all();
+        $query = Tire::query();
+
+        if ($request->filled('sifra')) {
+            $query->where('sifra', 'like', '%' . $request->input('sifra') . '%');
+        }
+
+        $perPage = $request->input('per_page', 10); // ili default 10 po stranici
+
+        return TireResource::collection($query->paginate($perPage));
     }
+
 
     public function store(Request $request)
     {
