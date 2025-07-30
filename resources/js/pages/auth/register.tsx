@@ -10,19 +10,27 @@ import { Label } from '@/components/ui/label';
 import AuthLayout from '@/layouts/auth-layout';
 
 type RegisterForm = {
-    name: string;
+    full_name: string;
     email: string;
     password: string;
     password_confirmation: string;
+    company_name: string;
+    jib: string;
+    phone: string;
 };
+
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm<Required<RegisterForm>>({
-        name: '',
+        full_name: '',
         email: '',
         password: '',
         password_confirmation: '',
+        company_name: '',
+        jib: '',
+        phone: '',
     });
+
 
     const submit: FormEventHandler = (e) => {
         e.preventDefault();
@@ -37,21 +45,63 @@ export default function Register() {
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
-                        <Label htmlFor="name">Name</Label>
+                        <Label htmlFor="company_name">Company name</Label>
                         <Input
-                            id="name"
+                            id="company_name"
                             type="text"
                             required
-                            autoFocus
-                            tabIndex={1}
-                            autoComplete="name"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
+                            value={data.company_name}
+                            onChange={(e) => setData('company_name', e.target.value)}
                             disabled={processing}
-                            placeholder="Full name"
+                            placeholder="Your Company Ltd."
                         />
-                        <InputError message={errors.name} className="mt-2" />
+                        <InputError message={errors.company_name} />
                     </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="jib">JIB</Label>
+                        <Input
+                            id="jib"
+                            type="text"
+                            required
+                            value={data.jib}
+                            onChange={(e) => setData('jib', e.target.value)}
+                            disabled={processing}
+                            placeholder="1234567890001"
+                        />
+                        <InputError message={errors.jib} />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="full_name">Contact person</Label>
+                        <Input
+                            id="full_name"
+                            type="text"
+                            required
+                            autoComplete="name"
+                            value={data.full_name}
+                            onChange={(e) => setData('full_name', e.target.value)}
+                            disabled={processing}
+                            placeholder="John Doe"
+                        />
+                        <InputError message={errors.full_name} className="mt-2" />
+                    </div>
+
+                    <div className="grid gap-2">
+                        <Label htmlFor="phone">Phone number</Label>
+                        <Input
+                            id="phone"
+                            type="text"
+                            required
+                            autoComplete="tel"
+                            value={data.phone}
+                            onChange={(e) => setData('phone', e.target.value)}
+                            disabled={processing}
+                            placeholder="+387 61 234 567"
+                        />
+                        <InputError message={errors.phone} />
+                    </div>
+
 
                     <div className="grid gap-2">
                         <Label htmlFor="email">Email address</Label>

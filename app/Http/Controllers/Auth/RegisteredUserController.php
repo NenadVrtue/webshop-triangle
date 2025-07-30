@@ -31,15 +31,22 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|lowercase|email|max:255|unique:'.User::class,
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'full_name'     => 'required|string|max:255',
+            'email'         => 'required|string|lowercase|email|max:255|unique:users,email',
+            'password'      => ['required', 'confirmed', Rules\Password::defaults()],
+            'company_name'  => 'required|string|max:255',
+            'jib'           => 'required|string|max:50|unique:users,jib',
+            'phone'         => 'required|string|max:50',
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'full_name'    => $request->full_name,
+            'email'        => $request->email,
+            'password'     => Hash::make($request->password),
+            'company_name' => $request->company_name,
+            'jib'          => $request->jib,
+            'phone'        => $request->phone,
+            'is_active'    => true,
         ]);
 
         event(new Registered($user));
@@ -48,4 +55,5 @@ class RegisteredUserController extends Controller
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
+
 }
