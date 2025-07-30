@@ -23,13 +23,13 @@ class ImportTiresFromCsv extends Command
 
         // Ovo je tačan redosled kolona u CSV-u, preveden u nazive polja iz migracije/modela
         $columns = [
-            'grupa', 'podgrupa', 'sifra', 'tip', 'dobavjac', 'naziv_dobavljaca',
-            'bar_kod', 'naziv', 'katalosski_brojevi', 'katalosski_broj_2', 'katalosski_broj_3',
-            'brend', 'erp', 'pdv_tarifa', 'jm', 'tezzina', 'ukupno_narucccivanje',
-            'koristi_za_cjenovnik', 'dimenzije', 'komercijalni_naziv_dezena', 'fabricccki_kod_dezena',
+            'grupa', 'podgrupa', 'sifra', 'tip', 'dobavljac', 'naziv_dobavljaca',
+            'bar_kod', 'naziv', 'kataloski_brojevi', 'kataloski_broj_2', 'kataloski_broj_3',
+            'brend', 'erp', 'pdv_tarifa', 'jm', 'tezina', 'ukupno_narucivanje',
+            'koristi_za_cjenovnik', 'dimenzije', 'komercijalni_naziv_dezena', 'fabricki_kod_dezena',
             'napomena_2', 'e_sound', 'e_mark', 'pr', 'load_speedindex', 'dot', 'pmsf', 'm_s',
-            'qty_utovar', 'ssirina', 'visina', 'precccnik', 'rr', 'wet', 'noise', 'xl', 'rim',
-            'eprel_code', 'pritisak_duvanja', 'dubina_gaznog_sloja', 'ssirina_gaznog_sloja'
+            'qty_utovar', 'sirina', 'visina', 'precnik', 'rr', 'wet', 'noise', 'xl', 'rim',
+            'eprel_code', 'pritisak_duvanja', 'dubina_gaznog_sloja', 'sirina_gaznog_sloja'
         ];
 
         $inserted = 0;
