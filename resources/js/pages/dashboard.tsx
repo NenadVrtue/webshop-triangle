@@ -4,6 +4,11 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { router } from '@inertiajs/react'
 import { useState, useEffect } from 'react';
+import { DataTable } from '@/components/table/data-table';
+import { createColumns } from '@/components/table/columns';
+import { useCart } from '@/hooks/useCart';
+import { CartSheet } from '@/components/cart/cart-sheet';
+import { ShoppingCart } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -20,7 +25,12 @@ interface Tire {
     id: number;
     sifra: string;
     naziv: string;
+    tip: string;
     is_active: boolean;
+    quantity: number;
+    dimenzije: string;
+    sirina: string;
+    visina: string;
 }
 
 interface DashboardProps {
@@ -41,13 +51,41 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Function to fetch tires using fetch API
-    const fetchTires = async (search = '') => {
+    // Pagination state
+    const [pagination, setPagination] = useState({
+        pageIndex: (initialTires?.meta?.current_page || 1) - 1, // Convert to 0-based index
+        pageSize: initialTires?.meta?.per_page || 10,
+    });
+    const [pageCount, setPageCount] = useState(
+        initialTires?.meta?.last_page || 1
+    );
+
+    // Initialize cart hook
+    const { addToCart, itemCount, isInCart, isLoaded, cart, totalQuantity, updateQuantity, removeFromCart, clearCart } = useCart();
+
+    // Debug cart state
+    useEffect(() => {
+        console.log('Dashboard: Cart itemCount changed:', itemCount);
+    }, [itemCount]);
+
+    useEffect(() => {
+        console.log('Dashboard: Cart loaded:', isLoaded);
+    }, [isLoaded]);
+
+    // Function to fetch tires using fetch API with pagination
+    const fetchTires = async (search = '', page = 1, perPage = 10) => {
         setLoading(true);
         try {
-            const url = search
-                ? `/api/tires?sifra=${encodeURIComponent(search)}`
-                : '/api/tires';
+            const params = new URLSearchParams({
+                page: page.toString(),
+                per_page: perPage.toString(),
+            });
+
+            if (search) {
+                params.append('sifra', search);
+            }
+
+            const url = `/api/tires?${params.toString()}`;
 
             const response = await fetch(url, {
                 headers: {
@@ -62,6 +100,14 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
 
             const data = await response.json();
             setTires(data.data || []);
+            setPageCount(data.meta?.last_page || 1);
+
+            // Update pagination state to match server response
+            setPagination({
+                pageIndex: (data.meta?.current_page || 1) - 1,
+                pageSize: data.meta?.per_page || 10,
+            });
+
         } catch (error) {
             console.error('Error fetching tires:', error);
         } finally {
@@ -69,82 +115,88 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
         }
     };
 
+    // Handle pagination changes
+    const handlePaginationChange = (updaterOrValue: ((prevState: { pageIndex: number; pageSize: number; }) => { pageIndex: number; pageSize: number; }) | { pageIndex: number; pageSize: number; }) => {
+        const newPagination = typeof updaterOrValue === 'function'
+            ? updaterOrValue(pagination)
+            : updaterOrValue;
+
+        setPagination(newPagination);
+
+        // Fetch new data when pagination changes
+        fetchTires(
+            searchTerm,
+            newPagination.pageIndex + 1, // Convert back to 1-based for API
+            newPagination.pageSize
+        );
+    };
+
     // Search handler
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
-        fetchTires(searchTerm);
+        // Reset to first page when searching
+        const newPagination = { ...pagination, pageIndex: 0 };
+        setPagination(newPagination);
+        fetchTires(searchTerm, 1, pagination.pageSize);
     };
+
+    // Handle adding tire to cart
+    const handleAddToCart = (tire: Tire) => {
+        if (!tire.is_active) {
+            alert('Ova guma nije aktivna i ne može biti dodana u korpu.');
+            return;
+        }
+
+        console.log('Dashboard: Adding tire to cart:', tire);
+        addToCart(tire, 1);
+        alert(`${tire.naziv} je dodana u korpu!`);
+    };
+
+    // Create columns with cart functionality
+    const tableColumns = createColumns(handleAddToCart);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Dashboard" />
-            <button onClick={logout} className="text-red-500">Odjavi se</button>
+
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
 
 
-                {/* Search Form */}
-                <form onSubmit={handleSearch} className="flex gap-2 mb-4">
-                    <input
-                        type="text"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        placeholder="Pretraži gume po šifri..."
-                        className="px-3 py-2 border rounded-md flex-1"
-                    />
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-                    >
-                        {loading ? 'Pretraživanje...' : 'Pretraži'}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            setSearchTerm('');
-                            fetchTires();
-                        }}
-                        className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
-                    >
-                        Resetuj
-                    </button>
-                </form>
 
-                {/* Tires List */}
-                <div className="bg-white rounded-lg shadow">
-                    <div className="px-4 py-3 border-b">
-                        <h3 className="text-lg font-semibold">Gume ({tires.length})</h3>
+                {/* Cart Info */}
+                <CartSheet
+                    cart={cart}
+                    itemCount={itemCount}
+                    totalQuantity={totalQuantity}
+                    isLoaded={isLoaded}
+                    updateQuantity={updateQuantity}
+                    removeFromCart={removeFromCart}
+                    clearCart={clearCart}
+                >
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 cursor-pointer hover:bg-blue-100 transition-colors">
+                        <div className="flex items-center gap-2">
+                            <ShoppingCart className="h-5 w-5 text-blue-600" />
+                            <h3 className="text-lg font-semibold text-blue-800">
+                                Korpa ({itemCount} tipova)
+                            </h3>
+                        </div>
+                        <p className="text-sm text-blue-600 mt-1">
+                            Kliknite da vidite sadržaj korpe
+                        </p>
                     </div>
-                    <div className="divide-y">
-                        {loading ? (
-                            <div className="p-4 text-center">Učitavanje...</div>
-                        ) : tires.length > 0 ? (
-                            tires.map((tire) => (
-                                <div key={tire.id} className="p-4 hover:bg-gray-50">
-                                    <div className="flex justify-between items-center">
-                                        <div>
-                                            <h4 className="font-medium">{tire.naziv}</h4>
-                                            <p className="text-sm text-gray-600">Šifra: {tire.sifra}</p>
-                                        </div>
-                                        <span
-                                            className={`px-2 py-1 text-xs rounded-full ${tire.is_active
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-red-100 text-red-800'
-                                                }`}
-                                        >
-                                            {tire.is_active ? 'Aktivna' : 'Neaktivna'}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="p-4 text-center text-gray-500">
-                                Nema pronađenih guma
-                            </div>
-                        )}
-                    </div>
-                </div>
+                </CartSheet>
 
+
+                <DataTable
+                    columns={tableColumns}
+                    data={tires}
+                    pagination={{
+                        pageIndex: pagination.pageIndex,
+                        pageSize: pagination.pageSize,
+                        pageCount: pageCount,
+                    }}
+                    onPageChange={handlePaginationChange}
+                />
 
             </div>
         </AppLayout>
