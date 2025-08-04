@@ -88,7 +88,7 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
                     <Button
                         onClick={() => onAddToCart(tire)}
                         size="sm"
-                        className="bg-blue-500 hover:bg-blue-600 text-white "
+
                         disabled={!tire.is_active}
                     >
                         Dodaj u korpu

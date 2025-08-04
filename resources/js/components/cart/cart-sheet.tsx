@@ -112,7 +112,7 @@ export function CartSheet({
                     </div>
                 </SheetHeader>
 
-                <div className="flex flex-col h-full">
+                <div className="flex flex-col  relative h-[calc(100dvh-136px)] ">
                     {!isLoaded ? (
                         <div className="flex-1 flex items-center justify-center">
                             <div className="text-center">
@@ -130,12 +130,12 @@ export function CartSheet({
                     ) : (
                         <>
                             {/* Cart Items */}
-                            <div className="flex-1 overflow-y-auto py-4">
-                                <div className="space-y-4">
+                            <div className=" overflow-y-auto pb-40 py-4">
+                                <div className="space-y-4 ">
                                     {cart.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="flex items-center gap-4 p-4 border rounded-lg"
+                                            className="flex flex-col  gap-4 p-4 border rounded-lg"
                                         >
                                             <div className="flex-1">
                                                 <h4 className="font-medium">{item.tire.naziv}</h4>
@@ -147,57 +147,60 @@ export function CartSheet({
                                                 </p>
                                             </div>
 
-                                            {/* Quantity Controls */}
-                                            <div className="flex items-center gap-2">
+                                            <div className='flex items-center justify-between'>
+                                                {/* Quantity Controls */}
+                                                <div className="flex items-center  gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            handleQuantityChange(item.id, item.quantity - 1)
+                                                        }
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <Minus className="h-4 w-4" />
+                                                    </Button>
+
+                                                    <Input
+                                                        type="number"
+                                                        min="1"
+                                                        value={editingQuantities[item.id] ?? item.quantity}
+                                                        onChange={(e) => handleQuantityInputChange(item.id, e.target.value)}
+                                                        onBlur={(e) => handleQuantityInputBlur(item.id, e.target.value)}
+                                                        onKeyDown={(e) => handleQuantityInputKeyPress(item.id, e.currentTarget.value, e)}
+                                                        className="w-16 h-8 text-center"
+                                                    />
+
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() =>
+                                                            handleQuantityChange(item.id, item.quantity + 1)
+                                                        }
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        <Plus className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+
+                                                {/* Remove Button */}
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
-                                                    onClick={() =>
-                                                        handleQuantityChange(item.id, item.quantity - 1)
-                                                    }
-                                                    className="h-8 w-8 p-0"
+                                                    onClick={() => removeFromCart(item.id)}
+                                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                                                 >
-                                                    <Minus className="h-4 w-4" />
-                                                </Button>
-
-                                                <Input
-                                                    type="number"
-                                                    min="1"
-                                                    value={editingQuantities[item.id] ?? item.quantity}
-                                                    onChange={(e) => handleQuantityInputChange(item.id, e.target.value)}
-                                                    onBlur={(e) => handleQuantityInputBlur(item.id, e.target.value)}
-                                                    onKeyDown={(e) => handleQuantityInputKeyPress(item.id, e.currentTarget.value, e)}
-                                                    className="w-16 h-8 text-center"
-                                                />
-
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() =>
-                                                        handleQuantityChange(item.id, item.quantity + 1)
-                                                    }
-                                                    className="h-8 w-8 p-0"
-                                                >
-                                                    <Plus className="h-4 w-4" />
+                                                    <Trash2 className="h-4 w-4" />
                                                 </Button>
                                             </div>
 
-                                            {/* Remove Button */}
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => removeFromCart(item.id)}
-                                                className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                                            >
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
                             {/* Cart Footer */}
-                            <div className="border-t pt-4 space-y-4">
+                            <div className="border-t  w-full absolute bottom-0 bg-background pt-4 space-y-4">
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center">
                                         <span className="font-medium">Tipova stavki:</span>
