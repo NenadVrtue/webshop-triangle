@@ -11,25 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useCart } from "@/hooks/useCart";
 import { Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
-
-interface Tire {
-    id: number;
-    sifra: string;
-    naziv: string;
-    tip: string;
-    is_active: boolean;
-    quantity: number;
-    dimenzije: string;
-    sirina: string;
-    visina: string;
-}
-
-interface CartItem {
-    id: string;
-    tire: Tire;
-    quantity: number;
-    addedAt: Date;
-}
+import type { Tire, CartItem } from '@/types';
 
 interface CartSheetProps {
     children: React.ReactNode;
@@ -235,7 +217,10 @@ export function CartSheet({
                                     >
                                         Očisti korpu
                                     </Button>
-                                    <Button className="flex-1">
+                                    <Button
+                                        className="flex-1"
+                                        onClick={() => window.location.href = '/checkout'}
+                                    >
                                         Nastavi na checkout
                                     </Button>
                                 </div>

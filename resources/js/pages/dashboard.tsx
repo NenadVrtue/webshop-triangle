@@ -1,6 +1,6 @@
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type Tire } from '@/types';
 import { Head } from '@inertiajs/react';
 import { router } from '@inertiajs/react'
 import { useState, useEffect } from 'react';
@@ -19,18 +19,6 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 function logout() {
     router.post('/logout')
-}
-
-interface Tire {
-    id: number;
-    sifra: string;
-    naziv: string;
-    tip: string;
-    is_active: boolean;
-    quantity: number;
-    dimenzije: string;
-    sirina: string;
-    visina: string;
 }
 
 interface DashboardProps {

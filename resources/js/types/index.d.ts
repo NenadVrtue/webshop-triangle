@@ -41,3 +41,35 @@ export interface User {
     updated_at: string;
     [key: string]: unknown; // This allows for additional properties...
 }
+
+export interface Tire {
+    id: number;
+    sifra: string;
+    naziv: string;
+    tip: string;
+    is_active: boolean;
+    quantity: number;
+    dimenzije: string;
+    sirina: string;
+    visina: string;
+    veleprodajna_cijena?: number;
+    maloprodajna_cijena?: number;
+    nabavna_cijena?: number;
+    brend?: string;
+    dobavljac?: string;
+    naziv_dobavljaca?: string;
+    bar_kod?: string;
+    kataloski_brojevi?: string;
+    precnik?: string;
+}
+
+export interface CartItem {
+    id: string;
+    tire: Tire;
+    quantity: number;
+    addedAt: Date;
+}
+
+export interface AuthProps {
+    auth: Auth;
+}
