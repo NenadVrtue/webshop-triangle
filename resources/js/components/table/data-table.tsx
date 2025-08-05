@@ -14,6 +14,7 @@ import {
     getSortedRowModel,
     VisibilityState,
     OnChangeFn,
+    ColumnPinningState,
     getFilteredRowModel,
 } from "@tanstack/react-table"
 import {
@@ -59,7 +60,9 @@ export function DataTable<TData, TValue>({
     })
     const [sorting, setSorting] = useState<SortingState>([])
     const [globalFilter, setGlobalFilter] = useState<string>("")
-
+    const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
+        right: ['actions']
+    })
     // Determine if we're using server-side or client-side pagination
     const isServerSide = !!pagination;
 
@@ -73,6 +76,7 @@ export function DataTable<TData, TValue>({
         onSortingChange: setSorting,
         onGlobalFilterChange: setGlobalFilter,
         onColumnVisibilityChange: setColumnVisibility,
+        onColumnPinningChange: setColumnPinning,
 
         // Server-side pagination configuration
         ...(isServerSide && {
@@ -97,6 +101,7 @@ export function DataTable<TData, TValue>({
                 sorting,
                 columnVisibility,
                 globalFilter,
+                columnPinning,
             },
             initialState: {
                 pagination: {
@@ -121,7 +126,7 @@ export function DataTable<TData, TValue>({
                 </div>
             </div>
 
-            <div className="flex justify-between">
+            <div className="flex flex-col md:flex-row justify-between">
                 <DataTablePagination table={table} />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -150,14 +155,19 @@ export function DataTable<TData, TValue>({
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            <div className="rounded-md border">
-                <Table>
+            <div className="rounded-md border overflow-x-auto">
+                <Table className="relative">
                     <TableHeader>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header) => {
-                                    return (
-                                        <TableHead key={header.id}>
+                                {/* Left pinned headers */}
+                                {headerGroup.headers
+                                    .filter((header) => header.column.getIsPinned() === 'left')
+                                    .map((header) => (
+                                        <TableHead
+                                            key={header.id}
+                                            className="sticky left-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-r z-10"
+                                        >
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -165,8 +175,41 @@ export function DataTable<TData, TValue>({
                                                     header.getContext()
                                                 )}
                                         </TableHead>
-                                    )
-                                })}
+                                    ))}
+
+                                {/* Center (unpinned) headers */}
+                                {headerGroup.headers
+                                    .filter((header) => !header.column.getIsPinned())
+                                    .map((header) => {
+
+                                        return (
+                                            <TableHead key={header.id} >
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </TableHead>
+                                        );
+                                    })}
+
+                                {/* Right pinned headers */}
+                                {headerGroup.headers
+                                    .filter((header) => header.column.getIsPinned() === 'right')
+                                    .map((header) => (
+                                        <TableHead
+                                            key={header.id}
+                                            className="sticky right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-l z-10"
+                                        >
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                    header.column.columnDef.header,
+                                                    header.getContext()
+                                                )}
+                                        </TableHead>
+                                    ))}
                             </TableRow>
                         ))}
                     </TableHeader>
@@ -177,8 +220,38 @@ export function DataTable<TData, TValue>({
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
                                 >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
+                                    {/* Left pinned cells */}
+                                    {row.getLeftVisibleCells().map((cell) => (
+                                        <TableCell
+                                            key={cell.id}
+                                            className="sticky left-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-r z-10"
+                                        >
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </TableCell>
+                                    ))}
+
+                                    {/* Center (unpinned) cells */}
+                                    {row.getCenterVisibleCells().map((cell) => {
+                                        const metaClassName = cell.column.columnDef.meta?.className || '';
+                                        return (
+                                            <TableCell key={cell.id} className={metaClassName}>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </TableCell>
+                                        );
+                                    })}
+
+                                    {/* Right pinned cells */}
+                                    {row.getRightVisibleCells().map((cell) => (
+                                        <TableCell
+                                            key={cell.id}
+                                            className="sticky right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-l z-10"
+                                        >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext()

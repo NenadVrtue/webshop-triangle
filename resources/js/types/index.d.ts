@@ -74,3 +74,11 @@ export interface CartItem {
 export interface AuthProps {
     auth: Auth;
 }
+
+// Extend TanStack React Table types
+declare module '@tanstack/react-table' {
+    interface ColumnMeta<TData, TValue> {
+        sticky?: 'left' | 'right';
+        className?: string;
+    }
+}

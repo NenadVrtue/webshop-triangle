@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Button } from "@/components/ui/button"
 import { DataTableColumnHeader } from "./column-header"
+import { useState } from "react"
 
 import { ArrowUpDown } from "lucide-react"
 
@@ -27,6 +28,29 @@ interface Tire {
     visina: string;
 }
 
+// Expandable cell component for naziv
+function ExpandableNazivCell({ naziv }: { naziv: string }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <div
+            className={`cursor-pointer transition-all duration-200 ${isExpanded
+                    ? "max-w-none whitespace-normal break-words"
+                    : "max-w-40 h-auto md:max-w-none truncate"
+                }`}
+            title={naziv}
+            onClick={() => setIsExpanded(!isExpanded)}
+        >
+            {naziv}
+            {!isExpanded && naziv.length > 20 && (
+                <span className="ml-1 text-xs text-muted-foreground md:hidden">
+                    👆
+                </span>
+            )}
+        </div>
+    );
+}
+
 export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire>[] {
     return [
         {
@@ -38,6 +62,16 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
             accessorKey: "naziv",
             header: "Naziv",
             enableHiding: false,
+            meta: {
+                className: "max-w-40 h-auto md:max-w-none wrap"
+            },
+
+            cell: ({ row }) => {
+                const naziv = row.getValue("naziv") as string;
+                return (
+                    <ExpandableNazivCell naziv={naziv} />
+                );
+            },
         },
         {
             accessorKey: "tip",
@@ -88,7 +122,6 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
                     <Button
                         onClick={() => onAddToCart(tire)}
                         size="sm"
-
                         disabled={!tire.is_active}
                     >
                         Dodaj u korpu

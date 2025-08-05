@@ -12,8 +12,8 @@ import { ShoppingCart } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
-        href: '/dashboard',
+        title: 'Početna',
+        href: '/pocetna',
     },
 ];
 
@@ -99,7 +99,7 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
     if (loading) {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
-                <Head title="Dashboard" />
+                <Head title="Početna" />
                 <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
                     <div className="flex items-center justify-center h-64">
                         <div className="text-lg">Učitavam gume...</div>
@@ -111,7 +111,7 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+            <Head title="Početna" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
 
