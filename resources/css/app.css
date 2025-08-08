@@ -8,15 +8,16 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-    --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-
+    --font-sans: 'Roboto', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-mono: 'Roboto Mono', 'monospace';
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
 
     --color-background: var(--background);
+    --color-background-alt: var(--background-alt);
     --color-foreground: var(--foreground);
+    --color-foreground-alt: var(--foreground-alt);
 
     --color-card: var(--card);
     --color-card-foreground: var(--card-foreground);
@@ -36,7 +37,7 @@
     --color-accent: var(--accent);
     --color-accent-foreground: var(--accent-foreground);
 
-    --color-dark-background: var(--dark-background);
+    --color-background-dark: var(--background-dark);
     --color-light-background: var(--light-background);
 
     --color-destructive: var(--destructive);
@@ -83,12 +84,15 @@
 
 :root {
     --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    --background-alt: oklch(0.8998 0.0168 250.85);
+    --background-dark: oklch(0.0813 0.0407 262.93);
+    --foreground: oklch(0.1983 0.0803 261.06);
+    --foreground-alt: oklch(0.3904 0.1049 252.28);
     --card: oklch(1 0 0);
     --card-foreground: oklch(0.145 0 0);
 
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
+    --popover-foreground: oklch(0.1983 0.0803 261.06);
     --primary: oklch(0.3904 0.1049 252.28);
     --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.643 0.1177 225.51);
@@ -97,7 +101,7 @@
     --muted-foreground: oklch(0.556 0 0);
     --accent: oklch(0.97 0 0);
     --accent-foreground: oklch(0.205 0 0);
-    --dark-background: oklch(0.0813 0.0407 262.93);
+
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(0.577 0.245 27.325);
     --border: oklch(0.922 0 0);
@@ -110,11 +114,11 @@
     --chart-5: oklch(0.769 0.188 70.08);
     --radius: 0.625rem;
     --sidebar: oklch(0.8998 0.0168 250.85);
-    --sidebar-foreground: oklch(0.145 0 0);
+    --sidebar-foreground: oklch(0.1983 0.0803 261.06);
     --sidebar-primary: oklch(0.205 0 0);
     --sidebar-primary-foreground: oklch(0.985 0 0);
     --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
+    --sidebar-accent-foreground: oklch(0.1983 0.0803 261.06);
     --sidebar-border: oklch(0.922 0 0);
     --sidebar-ring: oklch(0.87 0 0);
 }
@@ -130,7 +134,7 @@
     --primary: oklch(0.985 0 0);
     --primary-foreground: oklch(0.205 0 0);
     --secondary: oklch(0.8142 0.156 79.6);
-    --secondary-foreground: oklch(0.985 0 0);
+    --secondary-foreground: oklch(0.1588 0.0407 262.93);
     --muted: oklch(0.269 0 0);
     --muted-foreground: oklch(0.708 0 0);
     --accent: oklch(0.269 0 0);

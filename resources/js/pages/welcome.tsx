@@ -13,7 +13,7 @@ export default function Welcome() {
                 <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
             </Head>
             <div className="flex min-h-screen flex-col items-center bg-background p-4 text-foreground lg:justify-center lg:p-8 dark:bg-background dark:text-input">
-                <header className="mb-6 w-full  text-sm  lg:max-w-6xl">
+                <header className="mb-10 w-full  text-sm  lg:max-w-6xl">
                     <svg width="251" height="28" viewBox="0 0 251 28" fill="" xmlns="http://www.w3.org/2000/svg" className='dark:text-white text-primary'>
                         <path d="M24.217 14L16.1738 0L8.04319 14L0 28H32.2602L24.217 14ZM17.4852 25.6375L22.9056 16.275L28.326 25.6375H17.4852ZM16.1738 23.3625L12.0648 16.275H20.1954L16.1738 23.3625ZM21.5068 14H10.7534L16.1738 4.6375L21.5068 14ZM9.35458 16.275L14.775 25.6375H4.0216L9.35458 16.275Z" fill="currentColor" />
                         <path d="M41.2646 11.2891H64.2576L62.5965 14.2641H56.0396L50.0946 24.7641H39.9532L45.8982 14.2641H39.6035L41.2646 11.2891Z" fill="currentColor" />
@@ -29,20 +29,20 @@ export default function Welcome() {
 
                 </header >
                 <div className="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
-                    <main className="grid grid-cols-1 lg:grid-cols-2  w-full  min-h-120 h-full  rounded-lg flex-col lg:max-w-6xl lg:flex-row">
-                        <div className="flex-1 bg-sidebar flex flex-col justify-center dark:bg-light-background rounded-br-lg rounded-bl-lg  p-8   shadow-[inset_0px_0px_0px_1px_rgba(26,26,0,0.16)] lg:rounded-tl-lg lg:rounded-br-none   dark:shadow-[inset_0px_0px_0px_1px_#fffaed2d]">
-                            <h1 className="mb-1 text-4xl font-medium">
-                                Dobrodošli na <br /> TRIANGLE
-                                WEBSHOP</h1>
+                    <main className="grid grid-cols-1 shadow-xl shadow-foreground/15 lg:grid-cols-2  w-full  min-h-120 h-full  rounded-md overflow-clip flex-col lg:max-w-6xl lg:flex-row">
+                        <div className="flex-1 bg-sidebar flex flex-col justify-center dark:bg-light-background  p-8 lg:px-10      ">
+                            <h1 className="mb-3 lg:mb-4 text-3xl lg:text-5xl  font-semibold uppercase">
+                                Dobrodošli na <br />  <span className="text-foreground-alt">TRIANGLE
+                                    WEBSHOP</span></h1>
 
                             {auth.user ? (
                                 <>
-                                    <p className="mb-2 ">
-                                        Prijavljeni ste kao {auth.user.full_name}. <br></br>
+                                    <p className="mb-6 text-xl ">
+                                        Prijavljeni ste kao <span className="font-semibold">{auth.user?.full_name || auth.user?.email}</span>. <br></br>
                                         Započnite kupovinu klikom na dugme ispod.
                                     </p>
                                     <div className="">
-                                        <Button asChild>
+                                        <Button asChild size="lg">
                                             <Link
                                                 href={route('dashboard')}
 
@@ -57,10 +57,10 @@ export default function Welcome() {
 
                             ) : (
                                 <>
-                                    <p className="mb-2 ">
+                                    <p className="mb-2 text-xl ">
                                         Ulogujte se koristeći kredencijale koje smo vam dostavili se kako bi započeli kupovinu.
                                     </p>
-                                    <Button asChild>
+                                    <Button asChild size="lg">
                                         <Link
                                             href={route('login')}
 
@@ -74,7 +74,7 @@ export default function Welcome() {
                                 </>
                             )}
                         </div>
-                        <div className="flex items-center justify-center bg-dark-background   overflow-hidden rounded-t-lg  lg:mb-0 lg:-ml-px  lg:rounded-t-none lg:rounded-r-lg dark:bg-sidebar">
+                        <div className="flex items-center justify-center bg-background-dark  p-4 overflow-hidden   lg:mb-0 lg:-ml-px  dark:bg-sidebar">
                             <img src="/gume.png" alt="" />
 
                         </div>
