@@ -46,7 +46,7 @@ interface SuccessProps {
 
 export default function Success({ order }: SuccessProps) {
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('hr-HR', {
+        return new Date(dateString).toLocaleDateString('sr-Latn-BA', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',

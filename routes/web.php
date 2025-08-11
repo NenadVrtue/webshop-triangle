@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Checkout and Order routes
     Route::get('/checkout', [OrderController::class, 'checkout'])->name('checkout');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}/success', [OrderController::class, 'success'])->name('orders.success');
 });
 

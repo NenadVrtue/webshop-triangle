@@ -77,6 +77,27 @@ class OrderController extends Controller
         return redirect()->route('orders.success', $order)->with('success', 'Narudžba je uspješno kreirana!');
     }
 
+    public function index()
+    {
+        $orders = Order::where('user_id', auth()->id())
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($order) {
+                return [
+                    'id' => $order->id,
+                    'order_date' => $order->order_date,
+                    'status' => $order->status,
+                    'customer_name' => $order->customer_name,
+                    'total' => (float) ($order->total ?? 0),
+                    'items_count' => $order->items()->count(),
+                ];
+            });
+
+        return Inertia::render('Orders/Index', [
+            'orders' => $orders
+        ]);
+    }
+
     public function success(Order $order)
     {
         // Load order with items and tire details
