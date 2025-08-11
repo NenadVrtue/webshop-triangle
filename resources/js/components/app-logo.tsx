@@ -8,7 +8,7 @@ export default function AppLogo() {
 
 
             </div>
-            <div className=" flex items-end h-full pb-1">
+            <div className=" flex  items-end h-full pb-1">
                 <svg width="212" height="14" viewBox="0 0 212 14" fill="none" xmlns="http://www.w3.org/2000/svg" className='w-full text-primary dark:text-white'>
                     <path d="M2.26461 0.289062H25.2576L23.5965 3.26406H17.0396L11.0946 13.7641H0.953221L6.89819 3.26406H0.603516L2.26461 0.289062Z" fill="currentColor" />
                     <path d="M51.5731 0.289062H30.9406L23.2471 13.8516H32.7765L35.137 9.73906H38.8963C40.2077 10.0016 40.2077 11.3141 40.2077 11.3141L40.6448 13.8516H49.2126L48.1635 8.77656C52.0976 8.60156 54.633 6.15156 54.8079 3.26406C55.0701 0.376562 51.5731 0.289062 51.5731 0.289062ZM45.1036 5.10156C44.9287 6.85156 43.967 7.72656 43.4425 7.72656H36.2735L38.8963 3.17656H43.6173C43.5299 3.26406 45.191 3.35156 45.1036 5.10156Z" fill="currentColor" />
