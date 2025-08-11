@@ -57,17 +57,20 @@ export default function Welcome() {
 
                             ) : (
                                 <>
-                                    <p className="mb-2 text-xl ">
+                                    <p className="mb-6 text-xl ">
                                         Ulogujte se koristeći kredencijale koje smo vam dostavili se kako bi započeli kupovinu.
                                     </p>
-                                    <Button asChild size="lg">
-                                        <Link
-                                            href={route('login')}
+                                    <div>
+                                        <Button asChild size="lg">
+                                            <Link
+                                                href={route('login')}
 
-                                        >
-                                            Uloguj se
-                                        </Link>
-                                    </Button>
+                                            >
+                                                Uloguj se
+                                            </Link>
+                                        </Button>
+                                    </div>
+
 
 
 
