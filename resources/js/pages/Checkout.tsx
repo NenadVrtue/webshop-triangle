@@ -19,7 +19,6 @@ interface CheckoutFormData {
     city: string;
     postal_code: string;
     notes: string;
-    discount: number;
     items: Array<{
         tire_id: number;
         quantity: number;
@@ -29,7 +28,6 @@ interface CheckoutFormData {
 
 export default function Checkout() {
     const { cart, updateQuantity, removeFromCart, clearCart } = useCart();
-    const [discount, setDiscount] = useState(0);
 
     // Get authenticated user data from Inertia page props safely
     const page = usePage();
@@ -45,7 +43,6 @@ export default function Checkout() {
         city: '',
         postal_code: '',
         notes: '',
-        discount: 0,
         items: [],
     });
 
@@ -58,19 +55,13 @@ export default function Checkout() {
         setData('items', formItems);
     }, [cart]);
 
-    // Update discount in form data
-    useEffect(() => {
-        setData('discount', discount);
-    }, [discount]);
-
     // Calculate totals
     const subtotal = cart.reduce((sum, item) => {
         const price = item.tire.veleprodajna_cijena || 0;
         return sum + (price * item.quantity);
     }, 0);
 
-    const discountAmount = discount;
-    const total = Math.max(0, subtotal - discountAmount);
+    const total = subtotal;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -325,34 +316,12 @@ export default function Checkout() {
 
                                         <Separator className="my-4" />
 
-                                        {/* Discount */}
-                                        <div className="space-y-2">
-                                            <Label htmlFor="discount">Popust (KM)</Label>
-                                            <Input
-                                                id="discount"
-                                                type="number"
-                                                value={discount}
-                                                onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                                                min="0"
-                                                step="0.01"
-                                            />
-                                        </div>
-
-                                        <Separator className="my-4" />
-
                                         {/* Totals */}
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
                                                 <span>Subtotal:</span>
                                                 <span>{subtotal.toFixed(2)} KM</span>
                                             </div>
-
-                                            {discountAmount > 0 && (
-                                                <div className="flex justify-between text-green-600">
-                                                    <span>Popust:</span>
-                                                    <span>-{discountAmount.toFixed(2)} KM</span>
-                                                </div>
-                                            )}
 
                                             <Separator />
 
