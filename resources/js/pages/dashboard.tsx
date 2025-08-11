@@ -1,6 +1,6 @@
 import { PlaceholderPattern } from '@/components/ui/placeholder-pattern';
 import AppLayout from '@/layouts/app-layout';
-import { type BreadcrumbItem } from '@/types';
+import { type BreadcrumbItem, type Tire } from '@/types';
 import { Head } from '@inertiajs/react';
 import { router } from '@inertiajs/react'
 import { useState, useEffect } from 'react';
@@ -12,25 +12,13 @@ import { ShoppingCart } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Dashboard',
-        href: '/dashboard',
+        title: 'Početna',
+        href: '/pocetna',
     },
 ];
 
 function logout() {
     router.post('/logout')
-}
-
-interface Tire {
-    id: number;
-    sifra: string;
-    naziv: string;
-    tip: string;
-    is_active: boolean;
-    quantity: number;
-    dimenzije: string;
-    sirina: string;
-    visina: string;
 }
 
 interface DashboardProps {
@@ -47,18 +35,8 @@ interface DashboardProps {
 
 export default function Dashboard({ tires: initialTires }: DashboardProps) {
     console.log("Dashboard komponenta se renderuje!");
-    const [tires, setTires] = useState(initialTires?.data || []);
+    const [tires, setTires] = useState<Tire[]>([]);
     const [loading, setLoading] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-
-    // Pagination state
-    const [pagination, setPagination] = useState({
-        pageIndex: (initialTires?.meta?.current_page || 1) - 1, // Convert to 0-based index
-        pageSize: initialTires?.meta?.per_page || 10,
-    });
-    const [pageCount, setPageCount] = useState(
-        initialTires?.meta?.last_page || 1
-    );
 
     // Initialize cart hook
     const { addToCart, itemCount, isInCart, isLoaded, cart, totalQuantity, updateQuantity, removeFromCart, clearCart } = useCart();
@@ -72,73 +50,36 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
         console.log('Dashboard: Cart loaded:', isLoaded);
     }, [isLoaded]);
 
-    // Function to fetch tires using fetch API with pagination
-    const fetchTires = async (search = '', page = 1, perPage = 10) => {
-        setLoading(true);
-        try {
-            const params = new URLSearchParams({
-                page: page.toString(),
-                per_page: perPage.toString(),
-            });
+    // Load all tire data for client-side filtering and pagination
+    useEffect(() => {
+        const fetchAllTires = async () => {
+            setLoading(true);
+            try {
+                // Fetch all tires without pagination (or with a very high per_page limit)
+                const response = await fetch('/api/tires?per_page=1000', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                });
 
-            if (search) {
-                params.append('sifra', search);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch tires');
+                }
+
+                const data = await response.json();
+                setTires(data.data || []);
+            } catch (error) {
+                console.error('Error fetching tires:', error);
+                // Fallback to initial data if API fails
+                setTires(initialTires?.data || []);
+            } finally {
+                setLoading(false);
             }
+        };
 
-            const url = `/api/tires?${params.toString()}`;
-
-            const response = await fetch(url, {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch tires');
-            }
-
-            const data = await response.json();
-            setTires(data.data || []);
-            setPageCount(data.meta?.last_page || 1);
-
-            // Update pagination state to match server response
-            setPagination({
-                pageIndex: (data.meta?.current_page || 1) - 1,
-                pageSize: data.meta?.per_page || 10,
-            });
-
-        } catch (error) {
-            console.error('Error fetching tires:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // Handle pagination changes
-    const handlePaginationChange = (updaterOrValue: ((prevState: { pageIndex: number; pageSize: number; }) => { pageIndex: number; pageSize: number; }) | { pageIndex: number; pageSize: number; }) => {
-        const newPagination = typeof updaterOrValue === 'function'
-            ? updaterOrValue(pagination)
-            : updaterOrValue;
-
-        setPagination(newPagination);
-
-        // Fetch new data when pagination changes
-        fetchTires(
-            searchTerm,
-            newPagination.pageIndex + 1, // Convert back to 1-based for API
-            newPagination.pageSize
-        );
-    };
-
-    // Search handler
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault();
-        // Reset to first page when searching
-        const newPagination = { ...pagination, pageIndex: 0 };
-        setPagination(newPagination);
-        fetchTires(searchTerm, 1, pagination.pageSize);
-    };
+        fetchAllTires();
+    }, [initialTires]);
 
     // Handle adding tire to cart
     const handleAddToCart = (tire: Tire) => {
@@ -155,13 +96,24 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
     // Create columns with cart functionality
     const tableColumns = createColumns(handleAddToCart);
 
+    if (loading) {
+        return (
+            <AppLayout breadcrumbs={breadcrumbs}>
+                <Head title="Početna" />
+                <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
+                    <div className="flex items-center justify-center h-64">
+                        <div className="text-lg">Učitavam gume...</div>
+                    </div>
+                </div>
+            </AppLayout>
+        );
+    }
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+            <Head title="Početna" />
 
             <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
-
-
 
                 {/* Cart Info */}
                 <CartSheet
@@ -186,16 +138,11 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
                     </div>
                 </CartSheet>
 
-
+                {/* Data Table with client-side filtering and pagination */}
                 <DataTable
                     columns={tableColumns}
                     data={tires}
-                    pagination={{
-                        pageIndex: pagination.pageIndex,
-                        pageSize: pagination.pageSize,
-                        pageCount: pageCount,
-                    }}
-                    onPageChange={handlePaginationChange}
+                // Remove pagination prop to enable client-side pagination
                 />
 
             </div>

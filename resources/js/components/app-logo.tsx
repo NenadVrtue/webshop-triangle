@@ -1,13 +1,25 @@
-import AppLogoIcon from './app-logo-icon';
-
 export default function AppLogo() {
     return (
         <>
-            <div className="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-                {/* <AppLogoIcon className="size-5 fill-current text-white dark:text-black" /> */}
+            <div className="p-px">
+                <svg width="30" height="26" viewBox="0 0 30 26" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-primary dark:text-white">
+                    <path d="M22.5203 13L15.0406 0L7.47967 13L0 26H30L22.5203 13ZM16.2602 23.8062L21.3008 15.1125L26.3415 23.8062H16.2602ZM15.0406 21.6938L11.2195 15.1125H18.7805L15.0406 21.6938ZM20 13H10L15.0406 4.30625L20 13ZM8.69919 15.1125L13.7398 23.8062H3.73984L8.69919 15.1125Z" fill="currentColor" />
+                </svg>
+
+
             </div>
-            <div className="ml-1 grid flex-1 text-left text-sm">
-                <span className="mb-0.5 truncate leading-tight font-semibold">Triangle Webshop</span>
+            <div className=" flex items-end h-full pb-1">
+                <svg width="212" height="14" viewBox="0 0 212 14" fill="none" xmlns="http://www.w3.org/2000/svg" className='w-full text-primary dark:text-white'>
+                    <path d="M2.26461 0.289062H25.2576L23.5965 3.26406H17.0396L11.0946 13.7641H0.953221L6.89819 3.26406H0.603516L2.26461 0.289062Z" fill="currentColor" />
+                    <path d="M51.5731 0.289062H30.9406L23.2471 13.8516H32.7765L35.137 9.73906H38.8963C40.2077 10.0016 40.2077 11.3141 40.2077 11.3141L40.6448 13.8516H49.2126L48.1635 8.77656C52.0976 8.60156 54.633 6.15156 54.8079 3.26406C55.0701 0.376562 51.5731 0.289062 51.5731 0.289062ZM45.1036 5.10156C44.9287 6.85156 43.967 7.72656 43.4425 7.72656H36.2735L38.8963 3.17656H43.6173C43.5299 3.26406 45.191 3.35156 45.1036 5.10156Z" fill="currentColor" />
+                    <path d="M62.8517 0.289062H71.2446L63.5511 13.7641H55.1582L62.8517 0.289062Z" fill="currentColor" />
+                    <path d="M82.8718 0.289062L69.2334 13.8516H75.7903L78.6754 11.2266H85.3198L84.7952 13.8516H93.8875L96.7726 0.289062H82.8718ZM85.9318 8.42656H81.8227L86.806 3.96406L85.9318 8.42656Z" fill="currentColor" />
+                    <path d="M162.605 0.289062H171.697L165.577 10.8766H178.429L176.768 13.7641H154.911L162.605 0.289062Z" fill="currentColor" />
+                    <path d="M182.537 13.7641H204.306L205.967 10.8766H193.028L194.514 8.25156H203.519L205.006 5.71406H196.001L197.662 2.82656H210.513L212 0.289062H190.231L182.537 13.7641Z" fill="currentColor" />
+                    <path d="M155.96 1.86099C155.96 1.86099 150.277 0.110988 145.206 0.198488C140.136 0.373488 133.579 2.64849 131.568 6.32349C131.568 6.32349 129.994 8.86099 131.48 11.2235C132.967 13.586 137.163 13.761 138.824 13.6735C140.573 13.586 142.846 13.3235 144.332 12.7985L143.807 13.6735H148.966L153.861 5.36099H143.283L141.36 8.59849H146.867C146.867 8.59849 145.731 11.0485 141.972 11.0485C138.212 11.0485 137.95 7.89849 138.649 6.67349C139.349 5.36099 140.485 4.13599 142.671 3.43599C144.857 2.73599 147.217 2.91099 149.84 3.08599C152.463 3.26099 154.823 3.69849 154.823 3.69849L155.96 1.86099Z" fill="currentColor" />
+                    <path d="M99.6572 13.7641L107.351 0.289062H116.093L119.153 8.42656L123.699 0.289062H129.382L121.689 13.7641H114.17L111.897 7.63906L108.4 13.7641H99.6572Z" fill="currentColor" />
+                </svg>
+
             </div>
         </>
     );

@@ -1,23 +1,5 @@
 import { useState, useEffect } from 'react';
-
-interface Tire {
-    id: number;
-    sifra: string;
-    naziv: string;
-    tip: string;
-    is_active: boolean;
-    quantity: number;
-    dimenzije: string;
-    sirina: string;
-    visina: string;
-}
-
-interface CartItem {
-    id: string;
-    tire: Tire;
-    quantity: number;
-    addedAt: Date;
-}
+import type { Tire, CartItem } from '@/types';
 
 interface CartState {
     items: CartItem[];

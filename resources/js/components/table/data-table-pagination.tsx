@@ -23,19 +23,28 @@ export function DataTablePagination<TData>({
     table,
 }: DataTablePaginationProps<TData>) {
     console.log(table.getState())
+
+    // Safety check for pagination state
+    const paginationState = table.getState().pagination;
+    if (!paginationState) {
+        return null; // Don't render if pagination state is not available
+    }
+
+    const { pageSize, pageIndex } = paginationState;
+
     return (
         <div className="flex items-center justify-between px-2">
             <div className="flex items-center space-x-6 lg:space-x-8">
                 <div className="flex items-center space-x-2">
                     <p className="text-sm font-medium">Rows per page</p>
                     <Select
-                        value={`${table.getState().pagination.pageSize}`}
+                        value={`${pageSize}`}
                         onValueChange={(value) => {
                             table.setPageSize(Number(value))
                         }}
                     >
                         <SelectTrigger className="h-8 w-[70px]">
-                            <SelectValue placeholder={table.getState().pagination.pageSize} />
+                            <SelectValue placeholder={pageSize} />
                         </SelectTrigger>
                         <SelectContent side="top">
                             {[10, 25, 50, 100].map((pageSize) => (
@@ -47,49 +56,45 @@ export function DataTablePagination<TData>({
                     </Select>
                 </div>
                 <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-                    Page {table.getState().pagination.pageIndex + 1} of{" "}
+                    Page {pageIndex + 1} of{" "}
                     {table.getPageCount()}
                 </div>
                 <div className="flex items-center space-x-2">
                     <Button
                         variant="outline"
-                        size="icon"
-                        className="hidden size-8 lg:flex"
+                        className="hidden h-8 w-8 p-0 lg:flex"
                         onClick={() => table.setPageIndex(0)}
                         disabled={!table.getCanPreviousPage()}
                     >
                         <span className="sr-only">Go to first page</span>
-                        <ChevronsLeft />
+                        <ChevronsLeft className="h-4 w-4" />
                     </Button>
                     <Button
                         variant="outline"
-                        size="icon"
-                        className="size-8"
+                        className="h-8 w-8 p-0"
                         onClick={() => table.previousPage()}
                         disabled={!table.getCanPreviousPage()}
                     >
                         <span className="sr-only">Go to previous page</span>
-                        <ChevronLeft />
+                        <ChevronLeft className="h-4 w-4" />
                     </Button>
                     <Button
                         variant="outline"
-                        size="icon"
-                        className="size-8"
+                        className="h-8 w-8 p-0"
                         onClick={() => table.nextPage()}
                         disabled={!table.getCanNextPage()}
                     >
                         <span className="sr-only">Go to next page</span>
-                        <ChevronRight />
+                        <ChevronRight className="h-4 w-4" />
                     </Button>
                     <Button
                         variant="outline"
-                        size="icon"
-                        className="hidden size-8 lg:flex"
+                        className="hidden h-8 w-8 p-0 lg:flex"
                         onClick={() => table.setPageIndex(table.getPageCount() - 1)}
                         disabled={!table.getCanNextPage()}
                     >
                         <span className="sr-only">Go to last page</span>
-                        <ChevronsRight />
+                        <ChevronsRight className="h-4 w-4" />
                     </Button>
                 </div>
             </div>
