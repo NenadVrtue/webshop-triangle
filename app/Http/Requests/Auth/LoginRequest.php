@@ -33,6 +33,18 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Get the error messages for the defined validation rules.
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Email adresa je obavezna.',
+            'email.email' => 'Molimo unesite važeću email adresu.',
+            'password.required' => 'Šifra je obavezna.',
+        ];
+    }
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -45,7 +57,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => __('auth.failed'),
+                'email' => 'Pogrešni podaci za prijavu. Molimo provjerite email adresu i šifru.',
             ]);
         }
 

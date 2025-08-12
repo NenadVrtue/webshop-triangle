@@ -30,9 +30,9 @@ export default function Welcome() {
                 </header >
                 <div className="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
                     <main className="grid grid-cols-1 shadow-xl shadow-foreground/15 lg:grid-cols-2  w-full  min-h-120 h-full  rounded-md overflow-clip flex-col lg:max-w-6xl lg:flex-row">
-                        <div className="flex-1 bg-sidebar flex flex-col justify-center dark:bg-light-background  p-8 lg:px-10      ">
-                            <h1 className="mb-3 lg:mb-4 text-3xl lg:text-5xl  font-semibold uppercase">
-                                Dobrodošli na <br />  <span className="text-foreground-alt">TRIANGLE
+                        <div className="flex-1 bg-sidebar flex flex-col justify-center dark:bg-light-background  p-8 lg:px-10  dark:text-foreground-alt    ">
+                            <h1 className="mb-3 lg:mb-4 text-3xl lg:text-5xl text-foreground dark:text-foreground-alt font-semibold uppercase">
+                                Dobrodošli na <br />  <span className="text-foreground-alt dark:text-primary">TRIANGLE
                                     WEBSHOP</span></h1>
 
                             {auth.user ? (
@@ -58,7 +58,7 @@ export default function Welcome() {
                             ) : (
                                 <>
                                     <p className="mb-6 text-xl ">
-                                        Ulogujte se koristeći kredencijale koje smo vam dostavili se kako bi započeli kupovinu.
+                                        Prijavite se koristeći kredencijale koje smo vam dostavili se kako bi započeli kupovinu.
                                     </p>
                                     <div>
                                         <Button asChild size="lg">
@@ -66,7 +66,7 @@ export default function Welcome() {
                                                 href={route('login')}
 
                                             >
-                                                Uloguj se
+                                                Prijavi se
                                             </Link>
                                         </Button>
                                     </div>
