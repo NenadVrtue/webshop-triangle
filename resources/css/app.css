@@ -127,12 +127,12 @@
     --background: oklch(0.1588 0.0407 262.93);
     --light-background: oklch(0.8998 0.0168 250.85);
     --foreground: oklch(0.985 0 0);
-    --foreground-alt: oklch(0.1588 0.0407 262.93);
+    --foreground-alt: oklch(0.1983 0.0803 261.06);
     --card: oklch(0.1983 0.0803 261.06);
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.145 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
+    --primary: oklch(0.3904 0.1049 252.28);
     --primary-foreground: oklch(0.205 0 0);
     --secondary: oklch(0.8142 0.156 79.6);
     --secondary-foreground: oklch(0.1588 0.0407 262.93);
