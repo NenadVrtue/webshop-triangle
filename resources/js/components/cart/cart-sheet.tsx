@@ -101,7 +101,7 @@ export function CartSheet({
             <SheetTrigger asChild>
                 {children}
             </SheetTrigger>
-            <SheetContent className="lg:max-w-md xl:max-w-2xl ">
+            <SheetContent className="lg:max-w-md xl:max-w-2xl  ">
                 <SheetHeader>
                     <SheetTitle className="flex items-center gap-2">
                         <ShoppingCart className="h-5 w-5" />
@@ -130,7 +130,7 @@ export function CartSheet({
                     ) : (
                         <>
                             {/* Cart Items */}
-                            <div className=" overflow-y-auto pb-40 py-4">
+                            <div className=" overflow-y-auto pb-40 px-4 py-4">
                                 <div className="space-y-4 ">
                                     {cart.map((item) => {
 
@@ -139,27 +139,30 @@ export function CartSheet({
                                         return (
                                             <div
                                                 key={item.id}
-                                                className="flex flex-col  gap-4 p-4 border rounded-lg"
+                                                className="flex flex-col dark:bg-sidebar  relative gap-4 p-4 border border-[#A5B7CF] shadow-md rounded-lg"
                                             >
-                                                <div className="flex-1">
+                                                {/* Remove Button */}
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => removeFromCart(item.id)}
+                                                    className="absolute  top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-700"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                                <div className="flex-1 ">
                                                     <h4 className="font-medium">{item.tire.naziv}</h4>
-                                                    <p className="text-sm text-gray-600">
+                                                    <p className="text-sm text-gray-600 dark:text-foreground">
                                                         Šifra: {item.tire.sifra}
                                                     </p>
-                                                    <p className="text-sm text-gray-600">
+                                                    <p className="text-sm text-gray-600 dark:text-foreground">
                                                         {item.tire.dimenzije}
                                                     </p>
+
                                                 </div>
 
                                                 <div className='flex items-center justify-between'>
-                                                    <div className="text-sm">
-                                                        <p className="text-gray-600">
-                                                            Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena} KM` : 'N/A'}
-                                                        </p>
-                                                        <p className="font-medium">
-                                                            Ukupno: {totalItemPrice.toFixed(2)} KM
-                                                        </p>
-                                                    </div>
+
                                                     {/* Quantity Controls */}
 
                                                     <div className="flex items-center  gap-2">
@@ -169,7 +172,7 @@ export function CartSheet({
                                                             onClick={() =>
                                                                 handleQuantityChange(item.id, item.quantity - 1)
                                                             }
-                                                            className="h-8 w-8 p-0"
+                                                            className="h-8 w-8 p-0 "
                                                         >
                                                             <Minus className="h-4 w-4" />
                                                         </Button>
@@ -181,7 +184,7 @@ export function CartSheet({
                                                             onChange={(e) => handleQuantityInputChange(item.id, e.target.value)}
                                                             onBlur={(e) => handleQuantityInputBlur(item.id, e.target.value)}
                                                             onKeyDown={(e) => handleQuantityInputKeyPress(item.id, e.currentTarget.value, e)}
-                                                            className="w-16 h-8 text-center"
+                                                            className="w-16 h-8 text-center border border-[#A5B7CF]"
                                                         />
 
                                                         <Button
@@ -190,21 +193,24 @@ export function CartSheet({
                                                             onClick={() =>
                                                                 handleQuantityChange(item.id, item.quantity + 1)
                                                             }
-                                                            className="h-8 w-8 p-0"
+                                                            className="h-8 w-8 p-0 "
                                                         >
                                                             <Plus className="h-4 w-4" />
                                                         </Button>
                                                     </div>
 
-                                                    {/* Remove Button */}
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => removeFromCart(item.id)}
-                                                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+
+                                                    <div className="text-right">
+                                                        <p className="text-gray-600 dark:text-foreground text-sm">
+                                                            Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena} KM` : 'N/A'}
+                                                        </p>
+                                                        <p className="font-medium dark:text-secondary text-primary text-lg">
+                                                            Ukupno: {totalItemPrice.toFixed(2)} KM
+                                                        </p>
+                                                    </div>
+
+
+
                                                 </div>
 
                                             </div>
@@ -214,19 +220,10 @@ export function CartSheet({
                             </div>
 
                             {/* Cart Footer */}
-                            <div className="border-t  w-full absolute bottom-0 bg-background pt-4 space-y-4">
-                                <div className="space-y-2">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-medium">Tipova stavki:</span>
-                                        <span className="font-bold">{itemCount}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-medium">Ukupno stavki:</span>
-                                        <span className="font-bold">{totalQuantity}</span>
-                                    </div>
-                                </div>
+                            <div className=" border-t w-full absolute bottom-0 bg-background pt-4 px-4 space-y-4">
+
                                 {/* Cart Total */}
-                                <div className="border-t pt-4 mt-4">
+                                <div className="pt-4 ">
                                     <div className="flex justify-between items-center">
                                         <span className="text-lg font-semibold">Ukupno:</span>
                                         <span className="text-xl font-bold">{cartTotal.toFixed(2)} KM</span>
