@@ -40,6 +40,10 @@ export function CartSheet({
     const cart = propCart ?? hookData.cart;
     const itemCount = propItemCount ?? hookData.itemCount;
     const totalQuantity = propTotalQuantity ?? hookData.totalQuantity;
+    const cartTotal = cart.reduce((sum, item) => {
+        const itemPrice = item.tire.veleprodajna_cijena || 0;
+        return sum + (itemPrice * item.quantity);
+    }, 0);
     const isLoaded = propIsLoaded ?? hookData.isLoaded;
 
     // Use prop functions if provided, otherwise use hook functions
@@ -91,25 +95,21 @@ export function CartSheet({
         }
     };
 
+
     return (
         <Sheet>
             <SheetTrigger asChild>
                 {children}
             </SheetTrigger>
-            <SheetContent className="w-[400px] sm:w-[540px]">
+            <SheetContent className="lg:max-w-md xl:max-w-2xl ">
                 <SheetHeader>
                     <SheetTitle className="flex items-center gap-2">
                         <ShoppingCart className="h-5 w-5" />
-                        Korpa ({itemCount} tipova)
+                        Korpa
                     </SheetTitle>
                     <SheetDescription>
-                        Pregled stavki u vašoj korpi ({totalQuantity} ukupno stavki)
+                        Pregled artikala u vašoj korpi (trenutno {totalQuantity} {totalQuantity === 1 ? 'artikl' : totalQuantity === 2 || totalQuantity === 3 || totalQuantity === 4 ? 'artikla' : 'artikala'} )
                     </SheetDescription>
-
-                    {/* Debug Info - Remove this in production */}
-                    <div className="bg-gray-100 p-2 rounded text-xs">
-                        <strong>Debug:</strong> isLoaded: {isLoaded.toString()}, cart.length: {cart.length}, itemCount: {itemCount}
-                    </div>
                 </SheetHeader>
 
                 <div className="flex flex-col  relative h-[calc(100dvh-136px)] ">
@@ -132,70 +132,84 @@ export function CartSheet({
                             {/* Cart Items */}
                             <div className=" overflow-y-auto pb-40 py-4">
                                 <div className="space-y-4 ">
-                                    {cart.map((item) => (
-                                        <div
-                                            key={item.id}
-                                            className="flex flex-col  gap-4 p-4 border rounded-lg"
-                                        >
-                                            <div className="flex-1">
-                                                <h4 className="font-medium">{item.tire.naziv}</h4>
-                                                <p className="text-sm text-gray-600">
-                                                    Šifra: {item.tire.sifra}
-                                                </p>
-                                                <p className="text-sm text-gray-600">
-                                                    {item.tire.dimenzije}
-                                                </p>
-                                            </div>
+                                    {cart.map((item) => {
 
-                                            <div className='flex items-center justify-between'>
-                                                {/* Quantity Controls */}
-                                                <div className="flex items-center  gap-2">
+                                        const totalItemPrice = (item.tire.veleprodajna_cijena ?? 0) * item.quantity;
+
+                                        return (
+                                            <div
+                                                key={item.id}
+                                                className="flex flex-col  gap-4 p-4 border rounded-lg"
+                                            >
+                                                <div className="flex-1">
+                                                    <h4 className="font-medium">{item.tire.naziv}</h4>
+                                                    <p className="text-sm text-gray-600">
+                                                        Šifra: {item.tire.sifra}
+                                                    </p>
+                                                    <p className="text-sm text-gray-600">
+                                                        {item.tire.dimenzije}
+                                                    </p>
+                                                </div>
+
+                                                <div className='flex items-center justify-between'>
+                                                    <div className="text-sm">
+                                                        <p className="text-gray-600">
+                                                            Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena} KM` : 'N/A'}
+                                                        </p>
+                                                        <p className="font-medium">
+                                                            Ukupno: {totalItemPrice.toFixed(2)} KM
+                                                        </p>
+                                                    </div>
+                                                    {/* Quantity Controls */}
+
+                                                    <div className="flex items-center  gap-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                handleQuantityChange(item.id, item.quantity - 1)
+                                                            }
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <Minus className="h-4 w-4" />
+                                                        </Button>
+
+                                                        <Input
+                                                            type="number"
+                                                            min="1"
+                                                            value={editingQuantities[item.id] ?? item.quantity}
+                                                            onChange={(e) => handleQuantityInputChange(item.id, e.target.value)}
+                                                            onBlur={(e) => handleQuantityInputBlur(item.id, e.target.value)}
+                                                            onKeyDown={(e) => handleQuantityInputKeyPress(item.id, e.currentTarget.value, e)}
+                                                            className="w-16 h-8 text-center"
+                                                        />
+
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() =>
+                                                                handleQuantityChange(item.id, item.quantity + 1)
+                                                            }
+                                                            className="h-8 w-8 p-0"
+                                                        >
+                                                            <Plus className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+
+                                                    {/* Remove Button */}
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() =>
-                                                            handleQuantityChange(item.id, item.quantity - 1)
-                                                        }
-                                                        className="h-8 w-8 p-0"
+                                                        onClick={() => removeFromCart(item.id)}
+                                                        className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
                                                     >
-                                                        <Minus className="h-4 w-4" />
-                                                    </Button>
-
-                                                    <Input
-                                                        type="number"
-                                                        min="1"
-                                                        value={editingQuantities[item.id] ?? item.quantity}
-                                                        onChange={(e) => handleQuantityInputChange(item.id, e.target.value)}
-                                                        onBlur={(e) => handleQuantityInputBlur(item.id, e.target.value)}
-                                                        onKeyDown={(e) => handleQuantityInputKeyPress(item.id, e.currentTarget.value, e)}
-                                                        className="w-16 h-8 text-center"
-                                                    />
-
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() =>
-                                                            handleQuantityChange(item.id, item.quantity + 1)
-                                                        }
-                                                        className="h-8 w-8 p-0"
-                                                    >
-                                                        <Plus className="h-4 w-4" />
+                                                        <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </div>
 
-                                                {/* Remove Button */}
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => removeFromCart(item.id)}
-                                                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700"
-                                                >
-                                                    <Trash2 className="h-4 w-4" />
-                                                </Button>
                                             </div>
-
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             </div>
 
@@ -209,6 +223,13 @@ export function CartSheet({
                                     <div className="flex justify-between items-center">
                                         <span className="font-medium">Ukupno stavki:</span>
                                         <span className="font-bold">{totalQuantity}</span>
+                                    </div>
+                                </div>
+                                {/* Cart Total */}
+                                <div className="border-t pt-4 mt-4">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-lg font-semibold">Ukupno:</span>
+                                        <span className="text-xl font-bold">{cartTotal.toFixed(2)} KM</span>
                                     </div>
                                 </div>
 
