@@ -270,7 +270,7 @@ export default function Checkout() {
                                                             {item.tire.sifra} • {item.tire.dimenzije}
                                                         </p>
                                                         <p className="text-sm font-medium">
-                                                            {(item.tire.veleprodajna_cijena || 0).toFixed(2)} KM
+                                                            {Number(item.tire.veleprodajna_cijena || 0).toFixed(2)} KM
                                                         </p>
                                                     </div>
 
