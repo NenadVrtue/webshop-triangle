@@ -36,11 +36,8 @@ export default function Login({ status, canResetPassword }: LoginProps) {
     };
 
     return (
-        <AuthLayout title="Prijavite se na vaš nalog" description="Unesite svoju email adresu i lozinku koju smo vam poslali">
+        <AuthLayout title="Prijavite se na Vaš nalog" description="Unesite svoju email adresu i šifru koju smo vam poslali">
             <Head title="Prijava" />
-
-
-
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
                     <div className="grid gap-2">
@@ -61,10 +58,10 @@ export default function Login({ status, canResetPassword }: LoginProps) {
 
                     <div className="grid gap-2">
                         <div className="flex items-center">
-                            <Label htmlFor="password">Lozinka *</Label>
+                            <Label htmlFor="password">Šifra *</Label>
                             {canResetPassword && (
                                 <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
-                                    Zaboravili ste lozinku?
+                                    Zaboravili ste šifru?
                                 </TextLink>
                             )}
                         </div>
@@ -76,7 +73,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="current-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            placeholder="Lozinka"
+                            placeholder="Šifra"
                         />
                         <InputError message={errors.password} />
                     </div>

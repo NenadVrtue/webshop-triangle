@@ -22,8 +22,8 @@ export default function ForgotPassword({ status }: { status?: string }) {
     };
 
     return (
-        <AuthLayout title="Zaboravili ste lozinku?" description="Upišite vaš email kako biste dobili link da resetujete lozinku">
-            <Head title="Zaboravljena lozinku" />
+        <AuthLayout title="Zaboravili ste šifru?" description="Upišite vaš email kako biste dobili link da resetujete šifru">
+            <Head title="Zaboravljena šifru" />
 
             {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
 
