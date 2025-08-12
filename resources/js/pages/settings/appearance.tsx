@@ -9,7 +9,7 @@ import SettingsLayout from '@/layouts/settings/layout';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
-        title: 'Appearance settings',
+        title: 'Podešavanje teme',
         href: '/settings/appearance',
     },
 ];
@@ -21,7 +21,7 @@ export default function Appearance() {
 
             <SettingsLayout>
                 <div className="space-y-6">
-                    <HeadingSmall title="Appearance settings" description="Update your account's appearance settings" />
+                    <HeadingSmall title="Podešavanje Teme" description="Izaberite temu boja koja vam najviše odgovara" />
                     <AppearanceTabs />
                 </div>
             </SettingsLayout>
