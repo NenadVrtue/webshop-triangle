@@ -6,9 +6,7 @@ import { router } from '@inertiajs/react'
 import { useState, useEffect } from 'react';
 import { DataTable } from '@/components/table/data-table';
 import { createColumns } from '@/components/table/columns';
-import { useCart } from '@/hooks/useCart';
-import { CartSheet } from '@/components/cart/cart-sheet';
-import { ShoppingCart } from 'lucide-react';
+import { useCartContext } from '@/layouts/app/app-sidebar-layout';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -33,22 +31,37 @@ interface DashboardProps {
     };
 }
 
+// Child component rendered INSIDE AppLayout to safely use context
+function DashboardContent({ tires }: { tires: Tire[] }) {
+    const { addToCart } = useCartContext();
+
+    const handleAddToCart = (tire: Tire) => {
+        if (!tire.is_active) {
+            alert('Ova guma nije aktivna i ne može biti dodana u korpu.');
+            return;
+        }
+        console.log('Dashboard: Adding tire to cart:', tire);
+        addToCart(tire, 1);
+        alert(`${tire.naziv} je dodana u korpu!`);
+    };
+
+    const tableColumns = createColumns(handleAddToCart);
+
+    return (
+        <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
+            {/* Data Table with client-side filtering and pagination */}
+            <DataTable
+                columns={tableColumns}
+                data={tires}
+            />
+        </div>
+    );
+}
+
 export default function Dashboard({ tires: initialTires }: DashboardProps) {
     console.log("Dashboard komponenta se renderuje!");
     const [tires, setTires] = useState<Tire[]>([]);
     const [loading, setLoading] = useState(false);
-
-    // Initialize cart hook
-    const { addToCart, itemCount, isInCart, isLoaded, cart, totalQuantity, updateQuantity, removeFromCart, clearCart } = useCart();
-
-    // Debug cart state
-    useEffect(() => {
-        console.log('Dashboard: Cart itemCount changed:', itemCount);
-    }, [itemCount]);
-
-    useEffect(() => {
-        console.log('Dashboard: Cart loaded:', isLoaded);
-    }, [isLoaded]);
 
     // Load all tire data for client-side filtering and pagination
     useEffect(() => {
@@ -81,21 +94,6 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
         fetchAllTires();
     }, [initialTires]);
 
-    // Handle adding tire to cart
-    const handleAddToCart = (tire: Tire) => {
-        if (!tire.is_active) {
-            alert('Ova guma nije aktivna i ne može biti dodana u korpu.');
-            return;
-        }
-
-        console.log('Dashboard: Adding tire to cart:', tire);
-        addToCart(tire, 1);
-        alert(`${tire.naziv} je dodana u korpu!`);
-    };
-
-    // Create columns with cart functionality
-    const tableColumns = createColumns(handleAddToCart);
-
     if (loading) {
         return (
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -112,40 +110,7 @@ export default function Dashboard({ tires: initialTires }: DashboardProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Početna" />
-
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 overflow-x-auto">
-
-                {/* Cart Info */}
-                <CartSheet
-                    cart={cart}
-                    itemCount={itemCount}
-                    totalQuantity={totalQuantity}
-                    isLoaded={isLoaded}
-                    updateQuantity={updateQuantity}
-                    removeFromCart={removeFromCart}
-                    clearCart={clearCart}
-                >
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 cursor-pointer hover:bg-blue-100 transition-colors">
-                        <div className="flex items-center gap-2">
-                            <ShoppingCart className="h-5 w-5 text-blue-600" />
-                            <h3 className="text-lg font-semibold text-blue-800">
-                                Korpa ({itemCount} tipova)
-                            </h3>
-                        </div>
-                        <p className="text-sm text-blue-600 mt-1">
-                            Kliknite da vidite sadržaj korpe
-                        </p>
-                    </div>
-                </CartSheet>
-
-                {/* Data Table with client-side filtering and pagination */}
-                <DataTable
-                    columns={tableColumns}
-                    data={tires}
-                // Remove pagination prop to enable client-side pagination
-                />
-
-            </div>
+            <DashboardContent tires={tires} />
         </AppLayout>
     );
 }
