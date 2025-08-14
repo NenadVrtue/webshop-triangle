@@ -1,5 +1,6 @@
 "use client"
-import { useState } from "react"
+import { useState, useMemo } from "react"
+import * as React from "react"
 import { ChevronDown, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +17,9 @@ import {
     OnChangeFn,
     ColumnPinningState,
     getFilteredRowModel,
+    FilterFn,
 } from "@tanstack/react-table"
+import { rankItem } from '@tanstack/match-sorter-utils'
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -35,6 +38,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { DataTablePagination } from "./data-table-pagination"
+import { Label } from "../ui/label"
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -46,6 +50,37 @@ interface DataTableProps<TData, TValue> {
     }
     onPageChange?: OnChangeFn<PaginationState>
 }
+
+// Official TanStack fuzzy filter implementation
+const fuzzyFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
+    // If no search value, show all rows
+    if (!value || value.trim() === '') return true;
+
+    // Get all searchable values from the row for global search
+    const searchableFields = [
+        row.original.sifra,
+        row.original.naziv,
+        row.original.tip,
+        row.original.dimenzije,
+        row.original.sirina?.toString(),
+        row.original.visina?.toString(),
+        row.original.brend,
+        row.original.dobavljac,
+        row.original.naziv_dobavljaca,
+        row.original.precnik?.toString(),
+        row.original.bar_kod,
+        row.original.kataloski_brojevi,
+    ].filter(Boolean).join(' '); // Combine all fields into one searchable string
+
+    // Rank the item using TanStack's match-sorter-utils
+    const itemRank = rankItem(searchableFields, value);
+
+    // Store the itemRank info for potential sorting
+    addMeta({ itemRank });
+
+    // Return if the item should be filtered in/out
+    return itemRank.passed;
+};
 
 export function DataTable<TData, TValue>({
     columns,
@@ -60,6 +95,7 @@ export function DataTable<TData, TValue>({
     })
     const [sorting, setSorting] = useState<SortingState>([])
     const [globalFilter, setGlobalFilter] = useState<string>("")
+    const [fuzzySearchValue, setFuzzySearchValue] = useState<string>("")
     const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
         right: ['actions']
     })
@@ -77,6 +113,13 @@ export function DataTable<TData, TValue>({
         onGlobalFilterChange: setGlobalFilter,
         onColumnVisibilityChange: setColumnVisibility,
         onColumnPinningChange: setColumnPinning,
+
+        // Configure filter functions
+        filterFns: {
+            fuzzy: fuzzyFilterFn,
+        },
+        // Use default global filter (strict matching)
+        globalFilterFn: 'auto',
 
         // Server-side pagination configuration
         ...(isServerSide && {
@@ -111,21 +154,61 @@ export function DataTable<TData, TValue>({
         }),
     })
 
+    // Apply fuzzy filter manually if fuzzy search has value
+    const displayRows = useMemo(() => {
+        let rows = table.getFilteredRowModel().rows;
+
+        // Apply fuzzy filter if there's a fuzzy search value
+        if (fuzzySearchValue && fuzzySearchValue.trim() !== '') {
+            rows = rows.filter(row => {
+                return fuzzyFilterFn(row, '', fuzzySearchValue, () => { });
+            });
+        }
+
+        return rows;
+    }, [table.getFilteredRowModel().rows, fuzzySearchValue]);
+
     return (
         <div className="space-y-4">
-            {/* Global Search Input */}
+            {/* Dual Search Inputs */}
+            <div className="flex pt-4 flex-row gap-4 justify-between">
+                <div className="flex mb-6 items-center gap-4 flex-1">
+                    {/* Default Strict Filter */}
+
+                    <div className="flex-1  max-w-sm">
+
+                        <div className="relative">
+
+                            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                placeholder="Filtriranje..."
+                                value={globalFilter ?? ""}
+                                onChange={(event) => setGlobalFilter(String(event.target.value))}
+                                className="pl-8"
+                            />
+
+                            <div className="text-xs absolute -bottom-6 text-muted-foreground mt-1">
+                                Striktno pretraživanje. Osjetljivo na razmake, velika i mala slova, itd
+                            </div>
+
+                        </div>
+                    </div>
 
 
-            <div className="flex pt-4 flex-row gap-2 justify-between">
-                <div className="flex items-center gap-2">
+                    {/* Fuzzy Search */}
                     <div className="relative flex-1 max-w-sm">
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input
-                            placeholder="Pretraga..."
-                            value={globalFilter ?? ""}
-                            onChange={(event) => setGlobalFilter(String(event.target.value))}
-                            className="pl-8"
+                            placeholder="Napredna pretraga..."
+                            value={fuzzySearchValue ?? ""}
+                            onChange={(event) => setFuzzySearchValue(String(event.target.value))}
+                            className="pl-8 border-blue-200 focus:border-blue-400"
                         />
+                        {fuzzySearchValue && (
+                            <div className="text-xs absolute -bottom-6 text-muted-foreground mt-1">
+                                Manje osjetljivo, ali i manje tačno pretraživanje.
+                            </div>
+                        )}
                     </div>
                 </div>
                 <DropdownMenu>
@@ -214,8 +297,8 @@ export function DataTable<TData, TValue>({
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row) => (
+                        {displayRows?.length ? (
+                            displayRows.map((row) => (
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
