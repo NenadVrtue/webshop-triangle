@@ -150,8 +150,8 @@ export function CartSheet({
                                                 >
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
-                                                <div className="flex-1 ">
-                                                    <h4 className="font-medium">{item.tire.naziv}</h4>
+                                                <div className="flex-1 pr-6 ">
+                                                    <h4 className="font-medium ">{item.tire.naziv}</h4>
                                                     <p className="text-sm text-gray-600 dark:text-foreground">
                                                         Šifra: {item.tire.sifra}
                                                     </p>
@@ -161,7 +161,7 @@ export function CartSheet({
 
                                                 </div>
 
-                                                <div className='flex items-center justify-between'>
+                                                <div className='flex flex-col-reverse lg:flex-row gap-2 items-center justify-between'>
 
                                                     {/* Quantity Controls */}
 
@@ -200,7 +200,7 @@ export function CartSheet({
                                                     </div>
 
 
-                                                    <div className="text-right">
+                                                    <div className="text-center lg:text-right">
                                                         <p className="text-gray-600 dark:text-foreground text-sm">
                                                             Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena} KM` : 'N/A'}
                                                         </p>
@@ -220,17 +220,17 @@ export function CartSheet({
                             </div>
 
                             {/* Cart Footer */}
-                            <div className=" border-t w-full absolute bottom-0 bg-background pt-4 px-4 space-y-4">
+                            <div className=" border-t w-full absolute  bottom-0 bg-background pt-4 px-4 space-y-4">
 
                                 {/* Cart Total */}
-                                <div className="pt-4 ">
+                                <div className="pt-0 lg:pt-4 ">
                                     <div className="flex justify-between items-center">
                                         <span className="text-lg font-semibold">Ukupno:</span>
                                         <span className="text-xl font-bold">{cartTotal.toFixed(2)} KM</span>
                                     </div>
                                 </div>
 
-                                <div className="flex gap-2">
+                                <div className="flex  flex-col lg:flex-row gap-2">
                                     <Button
                                         variant="outline"
                                         onClick={clearCart}
