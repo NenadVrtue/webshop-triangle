@@ -35,8 +35,8 @@ function ExpandableNazivCell({ naziv }: { naziv: string }) {
     return (
         <div
             className={`cursor-pointer transition-all duration-200 ${isExpanded
-                    ? "max-w-none whitespace-normal break-words"
-                    : "max-w-40 h-auto md:max-w-none truncate"
+                ? "max-w-none whitespace-normal break-words"
+                : "max-w-40 h-auto md:max-w-none truncate"
                 }`}
             title={naziv}
             onClick={() => setIsExpanded(!isExpanded)}
@@ -114,7 +114,7 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
         },
         {
             id: "actions",
-            header: "Akcije",
+            header: "AKCIJE",
             enableHiding: false,
             cell: ({ row }) => {
                 const tire = row.original;
@@ -123,6 +123,7 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
                         onClick={() => onAddToCart(tire)}
                         size="sm"
                         disabled={!tire.is_active}
+                        className="max-w-fit "
                     >
                         Dodaj u korpu
                     </Button>

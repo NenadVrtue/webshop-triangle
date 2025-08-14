@@ -114,20 +114,20 @@ export function DataTable<TData, TValue>({
     return (
         <div className="space-y-4">
             {/* Global Search Input */}
-            <div className="flex items-center gap-2">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Pretraga..."
-                        value={globalFilter ?? ""}
-                        onChange={(event) => setGlobalFilter(String(event.target.value))}
-                        className="pl-8"
-                    />
-                </div>
-            </div>
 
-            <div className="flex flex-col md:flex-row justify-between">
-                <DataTablePagination table={table} />
+
+            <div className="flex pt-4 flex-row gap-2 justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Pretraga..."
+                            value={globalFilter ?? ""}
+                            onChange={(event) => setGlobalFilter(String(event.target.value))}
+                            className="pl-8"
+                        />
+                    </div>
+                </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" className="ml-auto">
@@ -157,7 +157,7 @@ export function DataTable<TData, TValue>({
             </div>
             <div className="rounded-md border overflow-x-auto">
                 <Table className="relative">
-                    <TableHeader>
+                    <TableHeader className="bg-background-alt">
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
                                 {/* Left pinned headers */}
@@ -200,7 +200,7 @@ export function DataTable<TData, TValue>({
                                     .map((header) => (
                                         <TableHead
                                             key={header.id}
-                                            className="sticky right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-l z-10"
+                                            className="sticky  right-0 lg:flex lg:justify-center items-center bg-background lg:bg-none supports-[backdrop-filter]:bg-background-alt/95 lg:supports-[backdrop-filter]:bg-background-alt border-l lg:border-l-0 "
                                         >
                                             {header.isPlaceholder
                                                 ? null
@@ -250,7 +250,7 @@ export function DataTable<TData, TValue>({
                                     {row.getRightVisibleCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
-                                            className="sticky right-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-l z-10"
+                                            className="sticky  right-0 lg:flex lg:justify-center items-center bg-background/95 lg:bg-none backdrop-blur lg:backdrop-blur-none supports-[backdrop-filter]:bg-background/60 lg:supports-[backdrop-filter]:background-transparent border-l lg:border-l-0 z-10"
                                         >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
@@ -272,7 +272,9 @@ export function DataTable<TData, TValue>({
                         )}
                     </TableBody>
                 </Table>
+
             </div>
+            <DataTablePagination table={table} />
         </div>
     )
 }
