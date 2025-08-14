@@ -1,9 +1,10 @@
 "use client"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import * as React from "react"
 import { ChevronDown, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { rankItem } from '@tanstack/match-sorter-utils'
 import {
     ColumnDef,
     flexRender,
@@ -16,10 +17,7 @@ import {
     VisibilityState,
     OnChangeFn,
     ColumnPinningState,
-    getFilteredRowModel,
-    FilterFn,
 } from "@tanstack/react-table"
-import { rankItem } from '@tanstack/match-sorter-utils'
 import {
     DropdownMenu,
     DropdownMenuCheckboxItem,
@@ -51,37 +49,6 @@ interface DataTableProps<TData, TValue> {
     onPageChange?: OnChangeFn<PaginationState>
 }
 
-// Official TanStack fuzzy filter implementation
-const fuzzyFilterFn: FilterFn<any> = (row, columnId, value, addMeta) => {
-    // If no search value, show all rows
-    if (!value || value.trim() === '') return true;
-
-    // Get all searchable values from the row for global search
-    const searchableFields = [
-        row.original.sifra,
-        row.original.naziv,
-        row.original.tip,
-        row.original.dimenzije,
-        row.original.sirina?.toString(),
-        row.original.visina?.toString(),
-        row.original.brend,
-        row.original.dobavljac,
-        row.original.naziv_dobavljaca,
-        row.original.precnik?.toString(),
-        row.original.bar_kod,
-        row.original.kataloski_brojevi,
-    ].filter(Boolean).join(' '); // Combine all fields into one searchable string
-
-    // Rank the item using TanStack's match-sorter-utils
-    const itemRank = rankItem(searchableFields, value);
-
-    // Store the itemRank info for potential sorting
-    addMeta({ itemRank });
-
-    // Return if the item should be filtered in/out
-    return itemRank.passed;
-};
-
 export function DataTable<TData, TValue>({
     columns,
     data,
@@ -96,6 +63,12 @@ export function DataTable<TData, TValue>({
     const [sorting, setSorting] = useState<SortingState>([])
     const [globalFilter, setGlobalFilter] = useState<string>("")
     const [fuzzySearchValue, setFuzzySearchValue] = useState<string>("")
+    const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
+        right: ['actions']
+    })
+
+    // Advanced filters toggle
+    const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false)
 
     // Filter states
     const [selectedBrand, setSelectedBrand] = useState<string>("")
@@ -104,11 +77,86 @@ export function DataTable<TData, TValue>({
     const [selectedWidth, setSelectedWidth] = useState<string>("")
     const [selectedHeight, setSelectedHeight] = useState<string>("")
 
-    const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
-        right: ['actions']
-    })
-    // Determine if we're using server-side or client-side pagination
-    const isServerSide = !!pagination;
+    // Compute filteredData from inputs (strict, fuzzy, advanced)
+    const filteredData = React.useMemo(() => {
+        let out: any[] = [...(data as any[])];
+
+        // Strict (exact-ish) filter across fields
+        if (globalFilter?.trim()) {
+            const g = globalFilter.trim().toLowerCase();
+            out = out.filter((item: any) => {
+                const t = [
+                    item.sifra,
+                    item.naziv,
+                    item.tip,
+                    item.dimenzije,
+                    item.sirina?.toString(),
+                    item.visina?.toString(),
+                    item.brend,
+                    item.dobavljac,
+                    item.naziv_dobavljaca,
+                    item.precnik?.toString(),
+                    item.bar_kod,
+                    item.kataloski_brojevi,
+                ]
+                    .filter(Boolean)
+                    .join(' ')
+                    .toLowerCase();
+                return t.includes(g);
+            });
+        }
+
+        // Fuzzy filter across same fields
+        if (fuzzySearchValue?.trim()) {
+            const v = fuzzySearchValue.trim();
+            out = out.filter((item: any) => {
+                const searchableFields = [
+                    item.sifra,
+                    item.naziv,
+                    item.tip,
+                    item.dimenzije,
+                    item.sirina?.toString(),
+                    item.visina?.toString(),
+                    item.brend,
+                    item.dobavljac,
+                    item.naziv_dobavljaca,
+                    item.precnik?.toString(),
+                    item.bar_kod,
+                    item.kataloski_brojevi,
+                ]
+                    .filter(Boolean)
+                    .join(' ');
+                return rankItem(searchableFields, v).passed;
+            });
+        }
+
+        // Advanced filters (only when toggled)
+        if (showAdvancedFilters) {
+            if (selectedBrand) out = out.filter((x: any) => (x.brend ?? '').toString() === selectedBrand);
+            if (selectedType) out = out.filter((x: any) => (x.tip ?? '').toString() === selectedType);
+            if (selectedStatus) {
+                if (selectedStatus === 'active') out = out.filter((x: any) => (x.is_active === true) || (x.is_active === 1) || (x.is_active === '1'));
+                if (selectedStatus === 'inactive') out = out.filter((x: any) => (x.is_active === false) || (x.is_active === 0) || (x.is_active === '0') || (x.is_active == null));
+            }
+            if (selectedWidth) out = out.filter((x: any) => (x.sirina ?? '').toString() === selectedWidth);
+            if (selectedHeight) out = out.filter((x: any) => (x.visina ?? '').toString() === selectedHeight);
+        }
+
+        return out as TData[];
+    }, [
+        data,
+        globalFilter,
+        fuzzySearchValue,
+        showAdvancedFilters,
+        selectedBrand,
+        selectedType,
+        selectedStatus,
+        selectedWidth,
+        selectedHeight,
+    ]);
+
+    // Force default client-side pagination so filtering + fuzzy search paginate correctly
+    const isServerSide = false;
 
     // Extract unique values for filter dropdowns
     const uniqueBrands = React.useMemo(() => {
@@ -132,99 +180,28 @@ export function DataTable<TData, TValue>({
     }, [data]);
 
     const table = useReactTable({
-        data,
+        data: filteredData,
         columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
-        getFilteredRowModel: getFilteredRowModel(),
         onSortingChange: setSorting,
-        onGlobalFilterChange: setGlobalFilter,
         onColumnVisibilityChange: setColumnVisibility,
         onColumnPinningChange: setColumnPinning,
 
-        // Configure filter functions
-        filterFns: {
-            fuzzy: fuzzyFilterFn,
-        },
-        // Use default global filter (strict matching)
-        globalFilterFn: 'auto',
-
-        // Server-side pagination configuration
-        ...(isServerSide && {
-            manualPagination: true,
-            pageCount: pagination.pageCount,
-            onPaginationChange: onPageChange,
-            state: {
-                sorting,
-                columnVisibility,
-                globalFilter,
-                pagination: {
-                    pageIndex: pagination.pageIndex,
-                    pageSize: pagination.pageSize,
-                }
-            },
-        }),
-
         // Client-side pagination configuration
-        ...(!isServerSide && {
-            manualPagination: false,
-            state: {
-                sorting,
-                columnVisibility,
-                globalFilter,
-                columnPinning,
+        manualPagination: false,
+        state: {
+            sorting,
+            columnVisibility,
+            columnPinning,
+        },
+        initialState: {
+            pagination: {
+                pageSize: 10,
             },
-            initialState: {
-                pagination: {
-                    pageSize: 10,
-                },
-            },
-        }),
+        },
     })
-
-    // Apply all filters manually
-    const displayRows = React.useMemo(() => {
-        let rows = table.getFilteredRowModel().rows;
-
-        // Apply fuzzy filter if there's a fuzzy search value
-        if (fuzzySearchValue && fuzzySearchValue.trim() !== '') {
-            rows = rows.filter(row => {
-                return fuzzyFilterFn(row, '', fuzzySearchValue, () => { });
-            });
-        }
-
-        // Apply brand filter
-        if (selectedBrand) {
-            rows = rows.filter(row => row.original.brend === selectedBrand);
-        }
-
-        // Apply type filter
-        if (selectedType) {
-            rows = rows.filter(row => row.original.tip === selectedType);
-        }
-
-        // Apply status filter
-        if (selectedStatus) {
-            if (selectedStatus === 'active') {
-                rows = rows.filter(row => row.original.is_active === true);
-            } else if (selectedStatus === 'inactive') {
-                rows = rows.filter(row => row.original.is_active === false);
-            }
-        }
-
-        // Apply width filter
-        if (selectedWidth) {
-            rows = rows.filter(row => row.original.sirina === selectedWidth);
-        }
-
-        // Apply height filter
-        if (selectedHeight) {
-            rows = rows.filter(row => row.original.visina === selectedHeight);
-        }
-
-        return rows;
-    }, [table.getFilteredRowModel().rows, fuzzySearchValue, selectedBrand, selectedType, selectedStatus, selectedWidth, selectedHeight]);
 
     // Clear all filters function
     const clearAllFilters = () => {
@@ -241,188 +218,191 @@ export function DataTable<TData, TValue>({
     const activeFiltersCount = [
         globalFilter,
         fuzzySearchValue,
-        selectedBrand,
-        selectedType,
-        selectedStatus,
-        selectedWidth,
-        selectedHeight
+        ...(showAdvancedFilters ? [selectedBrand, selectedType, selectedStatus, selectedWidth, selectedHeight] : [])
     ].filter(Boolean).length;
+
+    // Reset to first page whenever any filter changes to avoid empty pages
+    React.useEffect(() => {
+        table.setPageIndex(0);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [globalFilter, fuzzySearchValue, showAdvancedFilters, selectedBrand, selectedType, selectedStatus, selectedWidth, selectedHeight]);
 
     return (
         <div className="space-y-4">
-            {/* Enhanced Dual Search Interface */}
+            {/* Simplified Search Interface */}
             <div className="bg-card/50 border rounded-lg p-4 space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <Search className="h-5 w-5 text-muted-foreground" />
-                        <h3 className="text-sm font-medium">Pretraživanje i filtriranje</h3>
+                        <h3 className="text-sm font-medium">Pretraživanje</h3>
                         {activeFiltersCount > 0 && (
                             <div className="flex items-center gap-1">
                                 <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
                                 <span className="text-xs text-muted-foreground">
-                                    {displayRows.length} rezultata ({activeFiltersCount} filtera)
+                                    {filteredData.length} rezultata
                                 </span>
                             </div>
                         )}
                     </div>
-                    {activeFiltersCount > 0 && (
+                    <div className="flex items-center gap-2">
                         <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            onClick={clearAllFilters}
-                            className="h-8 px-2 text-xs"
+                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                            className="h-8 px-3 text-xs"
                         >
-                            Obriši sve ({activeFiltersCount})
+                            Napredna pretraga
+                            <ChevronDown className={`ml-1 h-3 w-3 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
                         </Button>
-                    )}
+                        {activeFiltersCount > 0 && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={clearAllFilters}
+                                className="h-8 px-2 text-xs"
+                            >
+                                Obriši sve ({activeFiltersCount})
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Strict Filter Card */}
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 bg-gray-500 rounded-full"></div>
-                            <label className="text-sm font-medium text-foreground">
-                                Precizno pretraživanje
-                            </label>
+                            <Label htmlFor="strict-filter" className="text-xs font-medium text-muted-foreground">
+                                Filtriranje
+                            </Label>
                             {globalFilter && (
-                                <div className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded-full text-xs">
+                                <div className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
                                     Aktivno
                                 </div>
                             )}
                         </div>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Unesite tačan pojam..."
-                                value={globalFilter ?? ""}
-                                onChange={(event) => setGlobalFilter(String(event.target.value))}
-                                className="pl-9 h-9"
-                            />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            Traži tačno poklapanje. Osjetljivo na velika/mala slova i razmake.
-                        </p>
+                        <Input
+                            id="strict-filter"
+                            placeholder="Pretraži po svim poljima..."
+                            value={globalFilter}
+                            onChange={(e) => setGlobalFilter(e.target.value)}
+                            className="h-8 text-xs"
+                        />
                     </div>
 
                     {/* Fuzzy Search Card */}
                     <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                            <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                            <label className="text-sm font-medium text-foreground">
-                                Pametno pretraživanje
-                            </label>
+                            <Label htmlFor="fuzzy-search" className="text-xs font-medium text-muted-foreground">
+                                Napredna pretraga
+                            </Label>
                             {fuzzySearchValue && (
-                                <div className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 rounded-full text-xs text-blue-700 dark:text-blue-300">
-                                    Aktivno
+                                <div className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                                    Fuzzy
                                 </div>
                             )}
                         </div>
-                        <div className="relative">
-                            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input
-                                placeholder="Unesite bilo koji pojam..."
-                                value={fuzzySearchValue ?? ""}
-                                onChange={(event) => setFuzzySearchValue(String(event.target.value))}
-                                className="pl-9 h-9 border-blue-200 focus:border-blue-400 focus:ring-blue-400/20"
-                            />
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                            Tolerantno na greške u kucanju. Traži slične pojmove.
-                        </p>
+                        <Input
+                            id="fuzzy-search"
+                            placeholder="Tolerantna na greške u kucanju..."
+                            value={fuzzySearchValue}
+                            onChange={(e) => setFuzzySearchValue(e.target.value)}
+                            className="h-8 text-xs"
+                        />
                     </div>
                 </div>
 
-                {/* Filters Section */}
-                <div className="space-y-3 pt-2 border-t">
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                        <h4 className="text-sm font-medium">Filteri</h4>
+                {/* Collapsible Advanced Filters Section */}
+                {showAdvancedFilters && (
+                    <div className="space-y-3 pt-2 border-t animate-in slide-in-from-top-2">
+                        <div className="flex items-center gap-2">
+                            <div className="h-2 w-2 bg-green-500 rounded-full"></div>
+                            <h4 className="text-sm font-medium">Napredni filteri</h4>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                            {/* Brand Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Brend</label>
+                                <select
+                                    value={selectedBrand}
+                                    onChange={(e) => setSelectedBrand(e.target.value)}
+                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
+                                >
+                                    <option value="">Svi brendovi</option>
+                                    {uniqueBrands.map(brand => (
+                                        <option key={brand} value={brand}>{brand}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Type Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Tip</label>
+                                <select
+                                    value={selectedType}
+                                    onChange={(e) => setSelectedType(e.target.value)}
+                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
+                                >
+                                    <option value="">Svi tipovi</option>
+                                    {uniqueTypes.map(type => (
+                                        <option key={type} value={type}>{type}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Status Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Status</label>
+                                <select
+                                    value={selectedStatus}
+                                    onChange={(e) => setSelectedStatus(e.target.value)}
+                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
+                                >
+                                    <option value="">Svi statusi</option>
+                                    <option value="active">Aktivne</option>
+                                    <option value="inactive">Neaktivne</option>
+                                </select>
+                            </div>
+
+                            {/* Width Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Širina</label>
+                                <select
+                                    value={selectedWidth}
+                                    onChange={(e) => setSelectedWidth(e.target.value)}
+                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
+                                >
+                                    <option value="">Sve širine</option>
+                                    {uniqueWidths.map(width => (
+                                        <option key={width} value={width}>{width}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Height Filter */}
+                            <div className="space-y-1">
+                                <label className="text-xs font-medium text-muted-foreground">Visina</label>
+                                <select
+                                    value={selectedHeight}
+                                    onChange={(e) => setSelectedHeight(e.target.value)}
+                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
+                                >
+                                    <option value="">Sve visine</option>
+                                    {uniqueHeights.map(height => (
+                                        <option key={height} value={height}>{height}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
                     </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                        {/* Brand Filter */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-muted-foreground">Brend</label>
-                            <select
-                                value={selectedBrand}
-                                onChange={(e) => setSelectedBrand(e.target.value)}
-                                className="w-full h-8 px-2 text-xs border rounded-md bg-background"
-                            >
-                                <option value="">Svi brendovi</option>
-                                {uniqueBrands.map(brand => (
-                                    <option key={brand} value={brand}>{brand}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Type Filter */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-muted-foreground">Tip</label>
-                            <select
-                                value={selectedType}
-                                onChange={(e) => setSelectedType(e.target.value)}
-                                className="w-full h-8 px-2 text-xs border rounded-md bg-background"
-                            >
-                                <option value="">Svi tipovi</option>
-                                {uniqueTypes.map(type => (
-                                    <option key={type} value={type}>{type}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Status Filter */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-muted-foreground">Status</label>
-                            <select
-                                value={selectedStatus}
-                                onChange={(e) => setSelectedStatus(e.target.value)}
-                                className="w-full h-8 px-2 text-xs border rounded-md bg-background"
-                            >
-                                <option value="">Svi statusi</option>
-                                <option value="active">Aktivne</option>
-                                <option value="inactive">Neaktivne</option>
-                            </select>
-                        </div>
-
-                        {/* Width Filter */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-muted-foreground">Širina</label>
-                            <select
-                                value={selectedWidth}
-                                onChange={(e) => setSelectedWidth(e.target.value)}
-                                className="w-full h-8 px-2 text-xs border rounded-md bg-background"
-                            >
-                                <option value="">Sve širine</option>
-                                {uniqueWidths.map(width => (
-                                    <option key={width} value={width}>{width}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Height Filter */}
-                        <div className="space-y-1">
-                            <label className="text-xs font-medium text-muted-foreground">Visina</label>
-                            <select
-                                value={selectedHeight}
-                                onChange={(e) => setSelectedHeight(e.target.value)}
-                                className="w-full h-8 px-2 text-xs border rounded-md bg-background"
-                            >
-                                <option value="">Sve visine</option>
-                                {uniqueHeights.map(height => (
-                                    <option key={height} value={height}>{height}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                </div>
+                )}
 
                 {/* Active Filters Display */}
                 {activeFiltersCount > 0 && (
                     <div className="flex flex-wrap items-center gap-2 pt-2 border-t">
                         <span className="text-xs text-muted-foreground">Aktivni filteri:</span>
                         {globalFilter && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-md text-xs">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded-full text-xs">
                                 <span className="font-medium">Precizno:</span>
                                 <span className="text-muted-foreground">"{globalFilter}"</span>
                                 <button
@@ -434,7 +414,7 @@ export function DataTable<TData, TValue>({
                             </div>
                         )}
                         {fuzzySearchValue && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 rounded-md text-xs">
+                            <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 rounded-full text-xs">
                                 <span className="font-medium">Pametno:</span>
                                 <span className="text-muted-foreground">"{fuzzySearchValue}"</span>
                                 <button
@@ -445,8 +425,8 @@ export function DataTable<TData, TValue>({
                                 </button>
                             </div>
                         )}
-                        {selectedBrand && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-md text-xs">
+                        {showAdvancedFilters && selectedBrand && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-full text-xs">
                                 <span className="font-medium">Brend:</span>
                                 <span className="text-muted-foreground">{selectedBrand}</span>
                                 <button
@@ -457,8 +437,8 @@ export function DataTable<TData, TValue>({
                                 </button>
                             </div>
                         )}
-                        {selectedType && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-md text-xs">
+                        {showAdvancedFilters && selectedType && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-full text-xs">
                                 <span className="font-medium">Tip:</span>
                                 <span className="text-muted-foreground">{selectedType}</span>
                                 <button
@@ -469,8 +449,8 @@ export function DataTable<TData, TValue>({
                                 </button>
                             </div>
                         )}
-                        {selectedStatus && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-md text-xs">
+                        {showAdvancedFilters && selectedStatus && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-full text-xs">
                                 <span className="font-medium">Status:</span>
                                 <span className="text-muted-foreground">
                                     {selectedStatus === 'active' ? 'Aktivne' : 'Neaktivne'}
@@ -483,8 +463,8 @@ export function DataTable<TData, TValue>({
                                 </button>
                             </div>
                         )}
-                        {selectedWidth && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-md text-xs">
+                        {showAdvancedFilters && selectedWidth && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-full text-xs">
                                 <span className="font-medium">Širina:</span>
                                 <span className="text-muted-foreground">{selectedWidth}</span>
                                 <button
@@ -495,8 +475,8 @@ export function DataTable<TData, TValue>({
                                 </button>
                             </div>
                         )}
-                        {selectedHeight && (
-                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-md text-xs">
+                        {showAdvancedFilters && selectedHeight && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-full text-xs">
                                 <span className="font-medium">Visina:</span>
                                 <span className="text-muted-foreground">{selectedHeight}</span>
                                 <button
@@ -514,7 +494,7 @@ export function DataTable<TData, TValue>({
             {/* Column Visibility Controls */}
             <div className="flex items-center justify-between">
                 <div className="text-sm text-muted-foreground">
-                    Prikazano {displayRows.length} od {data.length} stavki
+                    Prikazano {table.getRowModel().rows.length} od {filteredData.length} rezultata (ukupno {data.length} stavki)
                 </div>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -527,20 +507,16 @@ export function DataTable<TData, TValue>({
                         {table
                             .getAllColumns()
                             .filter((column) => column.getCanHide())
-                            .map((column) => {
-                                return (
-                                    <DropdownMenuCheckboxItem
-                                        key={column.id}
-                                        className="capitalize"
-                                        checked={column.getIsVisible()}
-                                        onCheckedChange={(value) =>
-                                            column.toggleVisibility(!!value)
-                                        }
-                                    >
-                                        {column.id}
-                                    </DropdownMenuCheckboxItem>
-                                )
-                            })}
+                            .map((column) => (
+                                <DropdownMenuCheckboxItem
+                                    key={column.id}
+                                    className="capitalize"
+                                    checked={column.getIsVisible()}
+                                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                                >
+                                    {column.id}
+                                </DropdownMenuCheckboxItem>
+                            ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
@@ -569,19 +545,16 @@ export function DataTable<TData, TValue>({
                                 {/* Center (unpinned) headers */}
                                 {headerGroup.headers
                                     .filter((header) => !header.column.getIsPinned())
-                                    .map((header) => {
-
-                                        return (
-                                            <TableHead key={header.id} >
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                        header.column.columnDef.header,
-                                                        header.getContext()
-                                                    )}
-                                            </TableHead>
-                                        );
-                                    })}
+                                    .map((header) => (
+                                        <TableHead key={header.id} >
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                    header.column.columnDef.header,
+                                                    header.getContext()
+                                                )}
+                                        </TableHead>
+                                    ))}
 
                                 {/* Right pinned headers */}
                                 {headerGroup.headers
@@ -603,8 +576,8 @@ export function DataTable<TData, TValue>({
                         ))}
                     </TableHeader>
                     <TableBody>
-                        {displayRows?.length ? (
-                            displayRows.map((row) => (
+                        {table.getRowModel().rows.length ? (
+                            table.getRowModel().rows.map((row) => (
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
