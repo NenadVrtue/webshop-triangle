@@ -22,15 +22,15 @@ export default function ForgotPassword({ status }: { status?: string }) {
     };
 
     return (
-        <AuthLayout title="Forgot password" description="Enter your email to receive a password reset link">
-            <Head title="Forgot password" />
+        <AuthLayout title="Zaboravili ste šifru?" description="Upišite vaš email kako biste dobili link da resetujete šifru">
+            <Head title="Zaboravljena šifru" />
 
             {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}
 
             <div className="space-y-6">
                 <form onSubmit={submit}>
                     <div className="grid gap-2">
-                        <Label htmlFor="email">Email address</Label>
+                        <Label htmlFor="email">Email adresa</Label>
                         <Input
                             id="email"
                             type="email"
