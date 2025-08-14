@@ -179,6 +179,44 @@ export function DataTable<TData, TValue>({
         return [...new Set(heights)].sort();
     }, [data]);
 
+    // Get available heights for each width
+    const widthHeightsMap = React.useMemo(() => {
+        const map = new Map<string, Set<string>>();
+
+        (data as any[]).forEach(item => {
+            if (item.sirina && item.visina) {
+                const width = item.sirina.toString();
+                const height = item.visina.toString();
+
+                if (!map.has(width)) {
+                    map.set(width, new Set());
+                }
+                map.get(width)?.add(height);
+            }
+        });
+
+        return map;
+    }, [data]);
+
+    // Get available heights based on selected width
+    const availableHeights = React.useMemo(() => {
+        if (!selectedWidth) return [];
+        const heights = widthHeightsMap.get(selectedWidth) || new Set();
+        return Array.from(heights).sort((a, b) => parseFloat(a) - parseFloat(b));
+    }, [selectedWidth, widthHeightsMap]);
+
+    // Reset height if current selection is not available with selected width
+    React.useEffect(() => {
+        if (selectedWidth && selectedHeight && !availableHeights.includes(selectedHeight)) {
+            setSelectedHeight("");
+        }
+    }, [selectedWidth, selectedHeight, availableHeights]);
+
+    // Get count of available heights for each width
+    const getAvailableHeightsCount = (width: string) => {
+        return widthHeightsMap.get(width)?.size || 0;
+    };
+
     const table = useReactTable({
         data: filteredData,
         columns,
@@ -365,33 +403,64 @@ export function DataTable<TData, TValue>({
                             </div>
 
                             {/* Width Filter */}
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium text-muted-foreground">Širina</label>
+                            <div className="space-y-1 relative">
+                                <label className="text-xs font-medium text-muted-foreground">
+                                    Širina
+                                </label>
                                 <select
                                     value={selectedWidth}
                                     onChange={(e) => setSelectedWidth(e.target.value)}
-                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
+                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background appearance-none"
                                 >
                                     <option value="">Sve širine</option>
                                     {uniqueWidths.map(width => (
-                                        <option key={width} value={width}>{width}</option>
+                                        <option
+                                            key={width}
+                                            value={width}
+                                        >
+                                            {width} {getAvailableHeightsCount(width) > 0 && `(${getAvailableHeightsCount(width)} visina)`}
+                                        </option>
                                     ))}
                                 </select>
+                                <ChevronDown className="absolute right-2 top-7 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                             </div>
 
                             {/* Height Filter */}
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium text-muted-foreground">Visina</label>
+                            <div className="space-y-1 relative">
+                                <label className="text-xs font-medium text-muted-foreground">
+                                    Visina
+                                    {selectedWidth && (
+                                        <span className="ml-1 text-xs text-muted-foreground/70">
+                                            ({availableHeights.length} dostupno)
+                                        </span>
+                                    )}
+                                </label>
                                 <select
                                     value={selectedHeight}
                                     onChange={(e) => setSelectedHeight(e.target.value)}
-                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
+                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background appearance-none"
+                                    disabled={!selectedWidth}
                                 >
-                                    <option value="">Sve visine</option>
-                                    {uniqueHeights.map(height => (
-                                        <option key={height} value={height}>{height}</option>
-                                    ))}
+                                    <option value="">
+                                        {selectedWidth ? 'Sve dostupne visine' : 'Prvo izaberite širinu'}
+                                    </option>
+                                    {uniqueHeights.map(height => {
+                                        const isAvailable = !selectedWidth || availableHeights.includes(height);
+                                        return (
+                                            <option
+                                                key={height}
+                                                value={height}
+                                                disabled={!isAvailable}
+                                                className={!isAvailable ? 'text-muted-foreground/50 bg-muted/30' : ''}
+                                                title={!isAvailable ? 'Ova visina nije dostupna za odabranu širinu' : ''}
+                                            >
+                                                {height}
+                                                {!isAvailable && ' (nema na stanju)'}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
+                                <ChevronDown className="absolute right-2 top-7 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                             </div>
                         </div>
                     </div>
