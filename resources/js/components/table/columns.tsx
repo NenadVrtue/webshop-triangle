@@ -73,10 +73,7 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
                 );
             },
         },
-        {
-            accessorKey: "tip",
-            header: "Tip",
-        },
+
         {
             accessorKey: "dimenzije",
             header: ({ column }) => (
@@ -85,12 +82,14 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
         },
         {
             accessorKey: "sirina",
+
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Širina" />
             ),
         },
         {
             accessorKey: "visina",
+
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Visina" />
             ),

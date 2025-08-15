@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import type { Tire, CartItem } from '@/types';
 
 interface CartState {
@@ -59,6 +60,15 @@ export function useCart() {
                         : item
                 );
                 console.log('Updated existing item in cart:', updatedCart);
+
+                // Show toast for quantity update
+                toast.success(
+                    `Povećana količina: ${tire.naziv || tire.sifra} (${existingItem.quantity + quantity} kom)`,
+                    {
+                        description: 'Proizvod je već u korpi, količina je povećana',
+                    }
+                );
+
                 return updatedCart;
             } else {
                 // Add new item
@@ -70,6 +80,15 @@ export function useCart() {
                 };
                 const updatedCart = [...prevCart, newItem];
                 console.log('Added new item to cart:', updatedCart);
+
+                // Show toast for new item
+                toast.success(
+                    `Dodano u korpu: ${tire.naziv || tire.sifra}`,
+                    {
+                        description: `Količina: ${quantity} kom`,
+                    }
+                );
+
                 return updatedCart;
             }
         });

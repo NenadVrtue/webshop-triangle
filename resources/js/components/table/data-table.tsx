@@ -1,9 +1,11 @@
 "use client"
 import { useState, useMemo, useEffect } from "react"
 import * as React from "react"
-import { ChevronDown, Search } from "lucide-react"
+import { ChevronDown, Search, SlidersHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+
+import { VoiceSearchButton } from "@/components/voice-search-button"
 import { rankItem } from '@tanstack/match-sorter-utils'
 import {
     ColumnDef,
@@ -66,6 +68,17 @@ export function DataTable<TData, TValue>({
     const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
         right: ['actions']
     })
+
+
+    const [isListening, setIsListening] = useState(false)
+
+    const handleVoiceResult = (transcript: string) => {
+        setFuzzySearchValue(transcript)
+    }
+    const handleVoiceError = (error: string) => {
+        console.error(error)
+        alert(error)
+    }
 
     // Advanced filters toggle
     const [showAdvancedFilters, setShowAdvancedFilters] = useState<boolean>(false)
@@ -268,97 +281,103 @@ export function DataTable<TData, TValue>({
     return (
         <div className="space-y-4">
             {/* Simplified Search Interface */}
-            <div className="bg-card/50 border rounded-lg p-4 space-y-4">
+            <div className="max-w-4xl shadow-md dark:border dark:bg-card rounded-lg p-4 space-y-6">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <Search className="h-5 w-5 text-muted-foreground" />
-                        <h3 className="text-sm font-medium">Pretraživanje</h3>
-                        {activeFiltersCount > 0 && (
-                            <div className="flex items-center gap-1">
-                                <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
-                                <span className="text-xs text-muted-foreground">
-                                    {filteredData.length} rezultata
-                                </span>
-                            </div>
-                        )}
+                        <Search className="h-6 w-6 p-1 bg-primary text-white rounded-sm" />
+                        <h3 className="text-md font-medium">Pretraživanje</h3>
+
                     </div>
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-                            className="h-8 px-3 text-xs"
-                        >
-                            Napredna pretraga
-                            <ChevronDown className={`ml-1 h-3 w-3 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
-                        </Button>
-                        {activeFiltersCount > 0 && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={clearAllFilters}
-                                className="h-8 px-2 text-xs"
-                            >
-                                Obriši sve ({activeFiltersCount})
-                            </Button>
-                        )}
-                    </div>
+
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:flex md:justify-between gap-2 space-x-4">
                     {/* Strict Filter Card */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 md:flex-1">
                         <div className="flex items-center gap-2">
-                            <Label htmlFor="strict-filter" className="text-xs font-medium text-muted-foreground">
-                                Filtriranje
-                            </Label>
+                            <div>
+                                <Label htmlFor="strict-filter" className="text-sm font-medium ">
+                                    Precizno filtriranje
+                                </Label>
+                                <p className="text-xs text-muted-foreground">Osjetljivo na razmake, velika i mala slova...</p>
+                            </div>
+
                             {globalFilter && (
                                 <div className="px-1.5 py-0.5 bg-green-100 text-green-700 rounded text-xs font-medium">
-                                    Aktivno
+                                    Precizno
                                 </div>
                             )}
                         </div>
                         <Input
                             id="strict-filter"
-                            placeholder="Pretraži po svim poljima..."
+                            placeholder="Filtriraj..."
                             value={globalFilter}
                             onChange={(e) => setGlobalFilter(e.target.value)}
                             className="h-8 text-xs"
                         />
+
                     </div>
 
                     {/* Fuzzy Search Card */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 md:flex-1">
                         <div className="flex items-center gap-2">
-                            <Label htmlFor="fuzzy-search" className="text-xs font-medium text-muted-foreground">
-                                Napredna pretraga
-                            </Label>
+                            <div>
+                                <Label htmlFor="fuzzy-search" className="text-sm font-medium ">
+                                    Slobodna pretraga
+                                </Label>
+                                <p className="text-xs text-muted-foreground">Manje osjetljiva, ali i manje tačna pretraga</p>
+                            </div>
+
                             {fuzzySearchValue && (
                                 <div className="px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
-                                    Fuzzy
+                                    Slobodno
                                 </div>
                             )}
+
                         </div>
-                        <Input
-                            id="fuzzy-search"
-                            placeholder="Tolerantna na greške u kucanju..."
-                            value={fuzzySearchValue}
-                            onChange={(e) => setFuzzySearchValue(e.target.value)}
-                            className="h-8 text-xs"
-                        />
+                        <div className="flex gap-2 md:flex-1">
+                            <Input
+                                id="fuzzy-search"
+                                placeholder="Pretraži..."
+                                value={fuzzySearchValue}
+                                onChange={(e) => setFuzzySearchValue(e.target.value)}
+                                className="h-8 text-xs"
+                            />
+                            <VoiceSearchButton
+                                onResult={handleVoiceResult}
+                                onError={handleVoiceError}
+                                isListening={isListening}
+                                setIsListening={setIsListening}
+                            />
+                        </div>
+
+                    </div>
+                    <div className="flex items-end gap-2">
+                        <Button
+                            variant="default"
+                            size="sm"
+                            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                            className="h-8 px-3 text-xs"
+                        >
+                            <SlidersHorizontal className="mr-1 h-4 w-4" />
+                            Napredni filteri
+                            <ChevronDown className={`ml-1 h-3 w-3 transition-transform ${showAdvancedFilters ? 'rotate-180' : ''}`} />
+                        </Button>
+
                     </div>
                 </div>
 
+
                 {/* Collapsible Advanced Filters Section */}
                 {showAdvancedFilters && (
-                    <div className="space-y-3 pt-2 border-t animate-in slide-in-from-top-2">
+                    <div className="space-y-3 pt-3 border-t animate-in slide-in-from-top-2">
                         <div className="flex items-center gap-2">
                             <div className="h-2 w-2 bg-green-500 rounded-full"></div>
                             <h4 className="text-sm font-medium">Napredni filteri</h4>
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                            {/* Brand Filter */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-3">
+                            {/* Brand Filter 
                             <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Brend</label>
                                 <select
@@ -372,8 +391,9 @@ export function DataTable<TData, TValue>({
                                     ))}
                                 </select>
                             </div>
+                            */}
 
-                            {/* Type Filter */}
+                            {/* Type Filter 
                             <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Tip</label>
                                 <select
@@ -387,8 +407,9 @@ export function DataTable<TData, TValue>({
                                     ))}
                                 </select>
                             </div>
+                            */}
 
-                            {/* Status Filter */}
+                            {/* Status Filter 
                             <div className="space-y-1">
                                 <label className="text-xs font-medium text-muted-foreground">Status</label>
                                 <select
@@ -401,47 +422,45 @@ export function DataTable<TData, TValue>({
                                     <option value="inactive">Neaktivne</option>
                                 </select>
                             </div>
+                            */}
 
                             {/* Width Filter */}
                             <div className="space-y-1 relative">
-                                <label className="text-xs font-medium text-muted-foreground">
+                                <Label className="text-sm font-medium ">
                                     Širina
-                                </label>
+                                </Label>
                                 <select
                                     value={selectedWidth}
                                     onChange={(e) => setSelectedWidth(e.target.value)}
-                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background appearance-none"
+                                    className=" appearance-none border-input file:text-foreground  placeholder:text-muted-foreground    flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                                 >
-                                    <option value="">Sve širine</option>
+                                    <option value="" className="dark:bg-card dark:text-card-foreground">Sve širine</option>
                                     {uniqueWidths.map(width => (
                                         <option
                                             key={width}
                                             value={width}
+                                            className="dark:bg-card dark:text-card-foreground"
                                         >
                                             {width} {getAvailableHeightsCount(width) > 0 && `(${getAvailableHeightsCount(width)} visina)`}
                                         </option>
                                     ))}
                                 </select>
-                                <ChevronDown className="absolute right-2 top-7 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                                <ChevronDown className="absolute right-2 top-9 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                             </div>
 
                             {/* Height Filter */}
                             <div className="space-y-1 relative">
-                                <label className="text-xs font-medium text-muted-foreground">
+                                <Label className="text-sm font-medium ">
                                     Visina
-                                    {selectedWidth && (
-                                        <span className="ml-1 text-xs text-muted-foreground/70">
-                                            ({availableHeights.length} dostupno)
-                                        </span>
-                                    )}
-                                </label>
+
+                                </Label>
                                 <select
                                     value={selectedHeight}
                                     onChange={(e) => setSelectedHeight(e.target.value)}
-                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background appearance-none"
+                                    className=" appearance-none border-input file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                                     disabled={!selectedWidth}
                                 >
-                                    <option value="">
+                                    <option value="" className="dark:bg-card dark:text-card-foreground">
                                         {selectedWidth ? 'Sve dostupne visine' : 'Prvo izaberite širinu'}
                                     </option>
                                     {uniqueHeights.map(height => {
@@ -451,7 +470,7 @@ export function DataTable<TData, TValue>({
                                                 key={height}
                                                 value={height}
                                                 disabled={!isAvailable}
-                                                className={!isAvailable ? 'text-muted-foreground/50 bg-muted/30' : ''}
+                                                className={!isAvailable ? 'text-muted-foreground/50 bg-muted/30 dark:bg-card dark:text-card-foreground' : 'dark:bg-card dark:text-card-foreground'}
                                                 title={!isAvailable ? 'Ova visina nije dostupna za odabranu širinu' : ''}
                                             >
                                                 {height}
@@ -460,11 +479,12 @@ export function DataTable<TData, TValue>({
                                         );
                                     })}
                                 </select>
-                                <ChevronDown className="absolute right-2 top-7 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                                <ChevronDown className="absolute right-2 top-9 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                             </div>
                         </div>
                     </div>
                 )}
+
 
                 {/* Active Filters Display */}
                 {activeFiltersCount > 0 && (
@@ -484,7 +504,7 @@ export function DataTable<TData, TValue>({
                         )}
                         {fuzzySearchValue && (
                             <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 dark:bg-blue-900 rounded-full text-xs">
-                                <span className="font-medium">Pametno:</span>
+                                <span className="font-medium">Slobodno:</span>
                                 <span className="text-muted-foreground">"{fuzzySearchValue}"</span>
                                 <button
                                     onClick={() => setFuzzySearchValue("")}
@@ -556,6 +576,16 @@ export function DataTable<TData, TValue>({
                                 </button>
                             </div>
                         )}
+                        {activeFiltersCount > 0 && (
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={clearAllFilters}
+                                className="md:ml-auto mt-2 md:mt-0 h-8 px-2 text-xs"
+                            >
+                                Obriši sve filtere ({activeFiltersCount})
+                            </Button>
+                        )}
                     </div>
                 )}
             </div>
@@ -568,8 +598,8 @@ export function DataTable<TData, TValue>({
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm" className="h-8">
+                            Dodatne Kolone
                             <ChevronDown className="h-4 w-4 mr-2" />
-                            Kolone
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -589,18 +619,19 @@ export function DataTable<TData, TValue>({
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            <div className="rounded-md border overflow-x-auto">
+            <p className="text-sm md:hidden text-muted-foreground"><span className="font-medium">Napomena:</span> <br />Za pregled svih kolona, prevucite tabelu u stranu.</p>
+            <div className="rounded-md shadow-lg border overflow-x-auto">
                 <Table className="relative">
-                    <TableHeader className="bg-background-alt">
+                    <TableHeader className="">
                         {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id}>
+                            <TableRow className="bg-secondary hover:bg-secondary dark:bg-primary dark:hover:bg-primary" key={headerGroup.id}>
                                 {/* Left pinned headers */}
                                 {headerGroup.headers
                                     .filter((header) => header.column.getIsPinned() === 'left')
                                     .map((header) => (
                                         <TableHead
                                             key={header.id}
-                                            className="sticky left-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-r z-10"
+                                            className="sticky left-0 text-white backdrop-blur  border-r z-10"
                                         >
                                             {header.isPlaceholder
                                                 ? null
@@ -615,7 +646,7 @@ export function DataTable<TData, TValue>({
                                 {headerGroup.headers
                                     .filter((header) => !header.column.getIsPinned())
                                     .map((header) => (
-                                        <TableHead key={header.id} >
+                                        <TableHead className="text-white" key={header.id} >
                                             {header.isPlaceholder
                                                 ? null
                                                 : flexRender(
@@ -631,7 +662,7 @@ export function DataTable<TData, TValue>({
                                     .map((header) => (
                                         <TableHead
                                             key={header.id}
-                                            className="sticky  right-0 lg:flex lg:justify-center items-center bg-background lg:bg-none supports-[backdrop-filter]:bg-background-alt/95 lg:supports-[backdrop-filter]:bg-background-alt border-l lg:border-l-0 "
+                                            className="sticky text-white right-0 lg:flex lg:justify-center items-center bg-none  dark:bg-primary dark:hover:bg-primary lg:bg-none supports-[backdrop-filter]:bg-secondary lg:supports-[backdrop-filter]:bg-secondary border-l lg:border-l-0 "
                                         >
                                             {header.isPlaceholder
                                                 ? null
@@ -646,10 +677,11 @@ export function DataTable<TData, TValue>({
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows.length ? (
-                            table.getRowModel().rows.map((row) => (
+                            table.getRowModel().rows.map((row, index) => (
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
+                                    className={index % 2 === 0 ? "bg-background dark:hover:bg-primary/20" : "bg-[#f4f6f9] hover:bg-[#f5f5f5] dark:bg-card dark:hover:bg-card/60"}
                                 >
                                     {/* Left pinned cells */}
                                     {row.getLeftVisibleCells().map((cell) => (
