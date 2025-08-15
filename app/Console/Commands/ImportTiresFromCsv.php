@@ -12,7 +12,7 @@ class ImportTiresFromCsv extends Command
 
     public function handle()
     {
-        $path = storage_path('app\private\triangle.csv'); // CSV bez header redas
+        $path = storage_path('app/private/triangle.csv'); // CSV bez header redas
 
         if (!file_exists($path)) {
             $this->error("CSV fajl nije pronađen: $path");
