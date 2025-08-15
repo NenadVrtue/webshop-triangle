@@ -42,7 +42,7 @@ function DashboardContent({ tires }: { tires: Tire[] }) {
         }
         console.log('Dashboard: Adding tire to cart:', tire);
         addToCart(tire, 1);
-        alert(`${tire.naziv} je dodana u korpu!`);
+
     };
 
     const tableColumns = createColumns(handleAddToCart);
