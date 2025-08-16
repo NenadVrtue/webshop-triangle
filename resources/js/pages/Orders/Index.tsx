@@ -48,12 +48,12 @@ export default function Index({ orders }: OrdersIndexProps) {
 
     const getStatusBadge = (status: string) => {
         const statusConfig = {
-            pending: { label: 'Na čekanju', variant: 'secondary' as const },
-            confirmed: { label: 'Potvrđeno', variant: 'default' as const },
-            processing: { label: 'U obradi', variant: 'default' as const },
-            shipped: { label: 'Poslano', variant: 'default' as const },
-            delivered: { label: 'Dostavljeno', variant: 'default' as const },
-            cancelled: { label: 'Otkazano', variant: 'destructive' as const },
+            pending: { label: 'Na čekanju', variant: 'pending' as const },
+            confirmed: { label: 'Potvrđeno', variant: 'confirmed' as const },
+            processing: { label: 'U obradi', variant: 'processing' as const },
+            shipped: { label: 'Poslano', variant: 'shipped' as const },
+            delivered: { label: 'Dostavljeno', variant: 'delivered' as const },
+            cancelled: { label: 'Otkazano', variant: 'cancelled' as const },
         };
 
         const config = statusConfig[status as keyof typeof statusConfig] || {
@@ -70,7 +70,6 @@ export default function Index({ orders }: OrdersIndexProps) {
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Početna" />
 
 
             <Head title="Moje narudžbe" />
@@ -84,12 +83,7 @@ export default function Index({ orders }: OrdersIndexProps) {
                             Pregled svih vaših narudžbi
                         </p>
                     </div>
-                    <Button asChild>
-                        <Link href="/dashboard">
-                            <ShoppingCart className="h-4 w-4 mr-2" />
-                            Nastavi kupovinu
-                        </Link>
-                    </Button>
+
                 </div>
 
                 {/* Orders Table */}
@@ -100,17 +94,17 @@ export default function Index({ orders }: OrdersIndexProps) {
                             Narudžbe ({orders.length})
                         </CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="px-2 xl:px-4">
                         {orders.length > 0 ? (
                             <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Broj narudžbe</TableHead>
+                                <TableHeader className="bg-background-alt dark:bg-primary ">
+                                    <TableRow className=''>
+                                        <TableHead className="rounded-tl-sm">Broj narudžbe</TableHead>
                                         <TableHead>Datum</TableHead>
                                         <TableHead>Status</TableHead>
                                         <TableHead>Stavke</TableHead>
                                         <TableHead className="text-right">Ukupno</TableHead>
-                                        <TableHead className="text-right">Akcije</TableHead>
+                                        <TableHead className="text-right rounded-tr-sm">Akcije</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -133,7 +127,7 @@ export default function Index({ orders }: OrdersIndexProps) {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <Button
-                                                    variant="outline"
+                                                    variant="default"
                                                     size="sm"
                                                     asChild
                                                 >

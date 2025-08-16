@@ -137,7 +137,7 @@ export default function Success({ order }: SuccessProps) {
 
                                         <div className="flex justify-between text-lg font-bold">
                                             <span>Ukupno:</span>
-                                            <span>{(order.total || 0).toFixed(2)} KM</span>
+                                            <span >{(order.total || 0).toFixed(2)} KM</span>
                                         </div>
                                     </div>
                                 </CardContent>
@@ -216,7 +216,7 @@ export default function Success({ order }: SuccessProps) {
                                 </CardHeader>
                                 <CardContent className="space-y-3">
                                     <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
+                                        <div className="w-6 h-6 rounded-full dark:bg-secondary dark:text-foreground-alt bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
                                             1
                                         </div>
                                         <div>
@@ -228,19 +228,19 @@ export default function Success({ order }: SuccessProps) {
                                     </div>
 
                                     <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
+                                        <div className="w-6 h-6 rounded-full dark:bg-secondary dark:text-foreground-alt bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
                                             2
                                         </div>
                                         <div>
                                             <p className="font-medium">Obrada narudžbe</p>
                                             <p className="text-sm text-muted-foreground">
-                                                Naš tim će uskoro kontaktirati vas radi potvrde
+                                                Naš tim će vas uskoro kontaktirati sa potvrdom narudžbe
                                             </p>
                                         </div>
                                     </div>
 
                                     <div className="flex items-start gap-3">
-                                        <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
+                                        <div className="w-6 h-6 rounded-full dark:bg-secondary dark:text-foreground-alt bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium">
                                             3
                                         </div>
                                         <div>
