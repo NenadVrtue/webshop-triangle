@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import type { CartItem, User } from '@/types';
+import { Link } from '@inertiajs/react';
 
 interface CheckoutFormData {
     customer_name: string;
@@ -82,6 +83,10 @@ export default function Checkout() {
         });
     };
 
+    // Add state for managing quantity inputs
+    const [editingQuantities, setEditingQuantities] = useState<{ [key: string]: string }>({});
+    const [quantityErrors, setQuantityErrors] = useState<{ [key: string]: string }>({});
+
     const handleQuantityChange = (item: CartItem, newQuantity: number) => {
         if (newQuantity <= 0) {
             removeFromCart(item.id);
@@ -90,11 +95,67 @@ export default function Checkout() {
         }
     };
 
+    const handleQuantityInputChange = (itemId: string, value: string) => {
+        setEditingQuantities(prev => ({ ...prev, [itemId]: value }));
+        // Clear any existing error for this item
+        if (quantityErrors[itemId]) {
+            setQuantityErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[itemId];
+                return newErrors;
+            });
+        }
+    };
+
+    const handleQuantityInputBlur = (itemId: string, value: string) => {
+        const numValue = parseInt(value);
+
+        if (!value.trim() || isNaN(numValue) || numValue <= 0) {
+            // Show error instead of removing item
+            setQuantityErrors(prev => ({
+                ...prev,
+                [itemId]: 'Količina mora biti veća od 0'
+            }));
+            // Reset to current quantity
+            const currentItem = cart.find(item => item.id === itemId);
+            if (currentItem) {
+                setEditingQuantities(prev => ({
+                    ...prev,
+                    [itemId]: currentItem.quantity.toString()
+                }));
+            }
+        } else {
+            // Valid quantity, update it
+            const currentItem = cart.find(item => item.id === itemId);
+            if (currentItem) {
+                handleQuantityChange(currentItem, numValue);
+            }
+            // Clear editing state
+            setEditingQuantities(prev => {
+                const newState = { ...prev };
+                delete newState[itemId];
+                return newState;
+            });
+            // Clear any error
+            setQuantityErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[itemId];
+                return newErrors;
+            });
+        }
+    };
+
+    const handleQuantityInputKeyPress = (itemId: string, value: string, e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            handleQuantityInputBlur(itemId, value);
+        }
+    };
+
     if (cart.length === 0) {
         return (
             <>
                 <Head title="Checkout" />
-                <div className="container mx-auto px-4 py-8">
+                <div className="container min-h-screen mx-auto px-4 py-8">
                     <div className="max-w-2xl mx-auto text-center">
                         <h1 className="text-3xl font-bold mb-4">Vaša korpa je prazna</h1>
                         <p className="text-muted-foreground mb-6">
@@ -112,9 +173,15 @@ export default function Checkout() {
     return (
         <>
             <Head title="Checkout" />
-            <div className="container mx-auto px-4 py-8">
+            <div className="container min-h-screen mx-auto px-4 py-8">
                 <div className="max-w-6xl mx-auto">
-                    <h1 className="text-3xl font-bold mb-8">Checkout</h1>
+                    <div className='flex justify-between '>
+                        <h1 className="text-3xl font-bold mb-8">Završi kupovinu</h1>
+                        <Button variant="outline" asChild>
+                            <Link href='/dashboard'>Povratak na dashboard</Link>
+                        </Button>
+                    </div>
+
 
                     <form onSubmit={handleSubmit}>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -245,7 +312,7 @@ export default function Checkout() {
                                                 value={data.notes}
                                                 onChange={(e) => setData('notes', e.target.value)}
                                                 className={errors.notes ? 'border-red-500' : ''}
-                                                placeholder="Dodatne napomene za narudžbu..."
+                                                placeholder="Dodatne napomene uz narudžbu..."
                                                 rows={3}
                                             />
 
@@ -262,68 +329,100 @@ export default function Checkout() {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="space-y-4">
-                                            {cart.map((item) => (
-                                                <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
-                                                    <div className="flex-1">
-                                                        <h4 className="font-medium">{item.tire.naziv}</h4>
-                                                        <p className="text-sm text-muted-foreground">
-                                                            {item.tire.sifra} • {item.tire.dimenzije}
-                                                        </p>
-                                                        <p className="text-sm font-medium">
-                                                            {(item.tire.veleprodajna_cijena || 0).toFixed(2)} KM
-                                                        </p>
-                                                    </div>
+                                            {cart.map((item) => {
+                                                const totalItemPrice = (item.tire.veleprodajna_cijena ?? 0) * item.quantity;
 
-                                                    <div className="flex items-center gap-2">
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleQuantityChange(item, item.quantity - 1)}
-                                                        >
-                                                            <Minus className="h-3 w-3" />
-                                                        </Button>
-
-                                                        <Input
-                                                            type="number"
-                                                            value={item.quantity}
-                                                            onChange={(e) => handleQuantityChange(item, parseInt(e.target.value) || 0)}
-                                                            className="w-16 text-center"
-                                                            min="0"
-                                                        />
-
-                                                        <Button
-                                                            type="button"
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => handleQuantityChange(item, item.quantity + 1)}
-                                                        >
-                                                            <Plus className="h-3 w-3" />
-                                                        </Button>
-
+                                                return (
+                                                    <div
+                                                        key={item.id}
+                                                        className="flex flex-col dark:bg-sidebar relative gap-4 p-4 border border-[#A5B7CF] shadow-md rounded-lg"
+                                                    >
+                                                        {/* Remove Button */}
                                                         <Button
                                                             type="button"
                                                             variant="outline"
                                                             size="sm"
                                                             onClick={() => removeFromCart(item.id)}
+                                                            className="absolute top-2 right-2 h-8 w-8 p-0 text-red-500 hover:text-red-700"
                                                         >
-                                                            <Trash2 className="h-3 w-3" />
+                                                            <Trash2 className="h-4 w-4" />
                                                         </Button>
+
+                                                        <div className="flex-1">
+                                                            <h4 className="font-medium">{item.tire.naziv}</h4>
+                                                            <p className="text-sm text-gray-600 dark:text-foreground">
+                                                                Šifra: <span className="font-medium dark:text-secondary"> {item.tire.sifra}</span>
+                                                            </p>
+                                                            <p className="text-sm text-gray-600 dark:text-foreground">
+                                                                Dimenzije: <span className="font-medium dark:text-secondary"> {item.tire.dimenzije}</span>
+                                                            </p>
+                                                        </div>
+
+                                                        <div className='flex items-center justify-between'>
+                                                            {/* Quantity Controls */}
+                                                            <div className="flex items-center gap-2">
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handleQuantityChange(item, item.quantity - 1)}
+                                                                    className="h-8 w-8 p-0"
+                                                                >
+                                                                    <Minus className="h-4 w-4" />
+                                                                </Button>
+
+                                                                <div className="flex flex-col relative items-center">
+                                                                    <Input
+                                                                        type="number"
+                                                                        min="1"
+                                                                        value={editingQuantities[item.id] ?? item.quantity}
+                                                                        onChange={(e) => handleQuantityInputChange(item.id, e.target.value)}
+                                                                        onBlur={(e) => handleQuantityInputBlur(item.id, e.target.value)}
+                                                                        onKeyDown={(e) => handleQuantityInputKeyPress(item.id, e.currentTarget.value, e)}
+                                                                        className={`w-16 h-8 text-center border ${quantityErrors[item.id] ? 'border-red-500' : 'border-[#A5B7CF]'}`}
+                                                                    />
+                                                                    {quantityErrors[item.id] && (
+                                                                        <p className="text-red-500 text-xs absolute -bottom-5 mt-1 text-center whitespace-nowrap">
+                                                                            {quantityErrors[item.id]}
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+
+                                                                <Button
+                                                                    type="button"
+                                                                    variant="outline"
+                                                                    size="sm"
+                                                                    onClick={() => handleQuantityChange(item, item.quantity + 1)}
+                                                                    className="h-8 w-8 p-0"
+                                                                >
+                                                                    <Plus className="h-4 w-4" />
+                                                                </Button>
+                                                            </div>
+
+                                                            <div className="text-right">
+                                                                <p className="text-gray-600 dark:text-foreground text-sm">
+                                                                    Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena} KM` : 'N/A'}
+                                                                </p>
+                                                                <p className="font-medium dark:text-secondary text-primary text-lg">
+                                                                    Ukupno: {totalItemPrice.toFixed(2)} KM
+                                                                </p>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
 
                                         <Separator className="my-4" />
 
                                         {/* Totals */}
                                         <div className="space-y-2">
-                                            <div className="flex justify-between">
+                                            {/* <div className="flex justify-between">
                                                 <span>Subtotal:</span>
                                                 <span>{subtotal.toFixed(2)} KM</span>
                                             </div>
 
-                                            <Separator />
+                                            <Separator /> */}
 
                                             <div className="flex justify-between text-lg font-bold">
                                                 <span>Ukupno:</span>
@@ -338,6 +437,7 @@ export default function Checkout() {
                                         >
                                             {processing ? 'Obrađuje se...' : 'Potvrdi narudžbu'}
                                         </Button>
+
                                     </CardContent>
                                 </Card>
                             </div>
