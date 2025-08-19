@@ -11,41 +11,61 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class UserController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        $query = User::query();
+        $users = User::all()->map(function ($user) {
+            return [
+                'id' => $user->id,
+                'full_name' => $user->full_name,
+                'email' => $user->email,
+                'role' => $user->role->name, // Pretpostavka da koristite Enum
+                'created_at' => $user->created_at->format('d.m.Y H:i'),
+            ];
+        });
 
-        // Filtri (opcionalni)
-        if ($search = $request->query('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('company_name', 'like', "%{$search}%")
-                    ->orWhere('full_name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->has('role')) {
-            $role = $request->query('role');
-            if ($role !== '' && $role !== null) {
-                $query->where('role', (int) $role);
-            }
-        }
-
-        if ($request->has('is_active')) {
-            $active = filter_var($request->query('is_active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-            if ($active !== null) {
-                $query->where('is_active', $active ? 1 : 0);
-            }
-        }
-
-        $perPage = (int) ($request->query('per_page', 15));
-        $users = $query->orderBy('id', 'desc')->paginate($perPage);
-
-        return UserResource::collection($users);
+        return Inertia::render('Users/Index', [
+            'users' => $users,
+            'can' => [
+                'create' => auth()->user()->isAdmin(),
+            ]
+        ]);
     }
+//    public function index(Request $request)
+//    {
+//        $query = User::query();
+//
+//        // Filtri (opcionalni)
+//        if ($search = $request->query('search')) {
+//            $query->where(function ($q) use ($search) {
+//                $q->where('company_name', 'like', "%{$search}%")
+//                    ->orWhere('full_name', 'like', "%{$search}%")
+//                    ->orWhere('email', 'like', "%{$search}%");
+//            });
+//        }
+//
+//        if ($request->has('role')) {
+//            $role = $request->query('role');
+//            if ($role !== '' && $role !== null) {
+//                $query->where('role', (int) $role);
+//            }
+//        }
+//
+//        if ($request->has('is_active')) {
+//            $active = filter_var($request->query('is_active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+//            if ($active !== null) {
+//                $query->where('is_active', $active ? 1 : 0);
+//            }
+//        }
+//
+//        $perPage = (int) ($request->query('per_page', 15));
+//        $users = $query->orderBy('id', 'desc')->paginate($perPage);
+//
+//        return UserResource::collection($users);
+//    }
 
     public function store(UserStoreRequest $request)
     {

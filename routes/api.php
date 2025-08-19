@@ -1,33 +1,33 @@
 <?php
 
+use App\Http\Controllers\Auth\ApiAuthController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\TireController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\UserController;
 
-Route::get('/user', function (Request $request) {
+Route::get('user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-// JAVNO: samo index i show za gume (imena: api.tires.index, api.tires.show)
+// JAVNE rute za gume
 Route::apiResource('tires', TireController::class)
     ->only(['index', 'show'])
     ->names('api.tires');
 
-// ORDERS pod auth (imena: api.orders.*)
-Route::middleware('auth:sanctum')->group(function () {
-    Route::apiResource('orders', OrderController::class)->names('api.orders');
+// ADMIN rute - zaštićene sa role:admin
+Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
+    Route::apiResource('users', UserController::class)
+        ->names('api.users');
 });
 
-// ADMIN: ostale tires akcije + users pod admin prefixom i name prefixom
-Route::prefix('admin')
-    ->middleware(['auth:sanctum', 'role:admin'])
-    ->as('admin.')
-    ->group(function () {
-        // admin.tires.* (bez index i show da ne kolidira sa javnim)
-        Route::apiResource('tires', TireController::class)->except(['index', 'show']);
+// ORDERS za sve autentifikovane korisnike
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('orders', OrderController::class)
+        ->names('api.orders');
+});
 
-        // admin.users.* (CRUD nad korisnicima)
-        Route::apiResource('users', UserController::class);
-    });
+Route::post('/login', [ApiAuthController::class, 'login']);
+Route::post('/logout', [ApiAuthController::class, 'logout'])->middleware('auth:sanctum');
