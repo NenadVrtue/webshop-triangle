@@ -69,7 +69,7 @@ class OrderController extends Controller
 
         // Send email notification
         try {
-            Mail::to(config('mail.admin_email', 'admin@example.com'))->send(new OrderCreated($order));
+            Mail::to(config('mail.admin_email', 'nenadvrtue@gmail.com'))->send(new OrderCreated($order));
         } catch (\Exception $e) {
             \Log::error('Failed to send order email: ' . $e->getMessage());
         }
