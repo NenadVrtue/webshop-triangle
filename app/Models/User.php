@@ -53,5 +53,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Discount::class);
     }
+    public function promoCodes()
+    {
+        return $this->belongsToMany(PromoCode::class)
+            ->withPivot('used_at')
+            ->withTimestamps();
+    }
+
 
 }
