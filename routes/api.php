@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\ApiAuthController;
 use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\PromoCodeController;
 use Illuminate\Http\Request;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,8 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
     Route::apiResource('users', UserController::class)
         ->names('api.users');
     Route::apiResource('discounts', DiscountController::class)->names('api.discounts');
+    Route::apiResource('promo-codes', PromoCodeController::class)->names('api.discounts');
+    Route::apiResource('tires', TireController::class)->names('api.tires');
 });
 
 // ORDERS za sve autentifikovane korisnike
