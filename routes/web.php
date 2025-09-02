@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Sales\DashboardController as SalesDashboardController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -34,7 +35,14 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     ->as('admin.')
     ->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::patch('/orders/{order}/status', [AdminDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
     });
-
+ // Sales routes (unprotected by role)
+ Route::prefix('sales')
+ ->as('sales.')
+ ->group(function () {
+     Route::get('/', [SalesDashboardController::class, 'index'])->name('dashboard');
+     Route::patch('/orders/{order}/status', [SalesDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
+ });
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
