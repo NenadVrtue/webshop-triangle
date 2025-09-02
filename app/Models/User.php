@@ -60,5 +60,4 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
-
 }

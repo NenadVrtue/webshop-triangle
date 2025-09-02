@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->timestamp('used_at')->nullable(); // kada je kod iskorišten
             $table->timestamps();
-
+            $table->integer('discount')->nullable();
             $table->unique(['promo_code_id', 'user_id']); // jedan korisnik ne može isti promo kod više puta
         });
     }

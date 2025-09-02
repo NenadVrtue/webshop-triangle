@@ -10,6 +10,7 @@ class PromoCode extends Model
     protected $fillable = [
         'code',
         'expires_at',
+        'discount',
     ];
 
     protected $dates = [
