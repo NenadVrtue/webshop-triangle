@@ -26,6 +26,7 @@ interface Tire {
     dimenzije: string;
     sirina: string;
     visina: string;
+    veleprodajna_cijena: number;
 }
 
 // Expandable cell component for naziv
@@ -95,19 +96,17 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
             ),
         },
         {
-            accessorKey: "is_active",
-            header: "Status",
+            accessorKey: "veleprodajna_cijena",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Cijena" />
+            ),
             cell: ({ row }) => {
-                const isActive = row.getValue("is_active") as boolean;
+                const price = row.getValue("veleprodajna_cijena") as number;
+                if (!price) return <span className="text-muted-foreground">-</span>;
                 return (
-                    <span
-                        className={`px-2 py-1 text-xs rounded-full ${isActive
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                            }`}
-                    >
-                        {isActive ? 'Aktivna' : 'Neaktivna'}
-                    </span>
+                    <div className="font-medium">
+                        {price} KM
+                    </div>
                 );
             },
         },
