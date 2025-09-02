@@ -39,11 +39,5 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
 });
-
-// TODO Kad se doda skladistar pridruziti sljedecu funkciju samo njegovoj privilegiji
-
-Route::post('/orders/{order}/done', [OrderController::class, 'markAsDone'])
-    ->name('orders.done');
-
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

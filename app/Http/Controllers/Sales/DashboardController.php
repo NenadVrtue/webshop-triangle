@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Sales;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,26 +11,7 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Get all users with their order counts
-        $users = User::withCount('orders')
-            ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'full_name' => $user->full_name,
-                    'email' => $user->email,
-                    'company_name' => $user->company_name,
-                    'phone' => $user->phone,
-                    'jib' => $user->jib,
-                    'role' => $user->role->name,
-                    'is_active' => $user->is_active,
-                    'orders_count' => $user->orders_count,
-                    'created_at' => $user->created_at,
-                ];
-            });
-
-        // Get all orders with customer and items info
+        // Get all orders with customer and items info for sales team
         $query = Order::with(['user', 'items']);
 
         // Filter by status
@@ -85,16 +65,8 @@ class DashboardController extends Controller
                 ];
             });
 
-        return Inertia::render('Admin/Dashboard', [
-            'users' => $users,
+        return Inertia::render('Sales/Dashboard', [
             'orders' => $orders,
-            'stats' => [
-                'total_users' => $users->count(),
-                'active_users' => $users->where('is_active', true)->count(),
-                'total_orders' => $orders->count(),
-                'pending_orders' => $orders->where('status', 'pending')->count(),
-                'total_revenue' => $orders->sum('total'),
-            ],
             'filters' => [
                 'status' => $request->status ?? 'all',
                 'date_from' => $request->date_from,

@@ -21,10 +21,7 @@ import {
     TableRow
 } from '@/components/ui/table';
 import {
-    Users,
     ShoppingCart,
-    DollarSign,
-    Clock,
     Mail,
     Phone,
     Building,
@@ -34,19 +31,6 @@ import {
     Filter,
     X
 } from 'lucide-react';
-
-interface User {
-    id: number;
-    full_name: string;
-    email: string;
-    company_name?: string;
-    phone?: string;
-    jib?: string;
-    role: string;
-    is_active: boolean;
-    orders_count: number;
-    created_at: string;
-}
 
 interface Order {
     id: number;
@@ -71,20 +55,10 @@ interface Order {
     created_at: string;
 }
 
-interface Stats {
-    total_users: number;
-    active_users: number;
-    total_orders: number;
-    pending_orders: number;
-    total_revenue: number;
-}
-
 interface Props {
-    users: User[];
     orders: Order[];
-    stats: Stats;
-    filters?: {
-        status?: string;
+    filters: {
+        status: string;
         date_from?: string;
         date_to?: string;
         customer_search?: string;
@@ -132,21 +106,21 @@ const formatCurrency = (amount: number) => {
     }).format(amount);
 };
 
-export default function AdminDashboard({ users, orders, stats, filters = {} }: Props) {
+export default function SalesDashboard({ orders, filters }: Props) {
     const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [localFilters, setLocalFilters] = useState({
-        status: filters?.status || 'all',
-        date_from: filters?.date_from || '',
-        date_to: filters?.date_to || '',
-        customer_search: filters?.customer_search || '',
+        status: filters.status || 'all',
+        date_from: filters.date_from || '',
+        date_to: filters.date_to || '',
+        customer_search: filters.customer_search || '',
     });
 
     const handleStatusUpdate = async (orderId: number, newStatus: string) => {
         setUpdatingStatus(orderId);
 
         try {
-            await router.patch(`/admin/orders/${orderId}/status`, {
+            await router.patch(`/sales/orders/${orderId}/status`, {
                 status: newStatus
             });
         } catch (error) {
@@ -172,7 +146,7 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
             }
         });
 
-        router.get('/admin', Object.fromEntries(params), {
+        router.get('/sales', Object.fromEntries(params), {
             preserveState: true,
             preserveScroll: true,
         });
@@ -185,7 +159,7 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
             date_to: '',
             customer_search: '',
         });
-        router.get('/admin');
+        router.get('/sales');
     };
 
     const statusOptions = [
@@ -200,264 +174,113 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
 
     return (
         <>
-            <Head title="Admin Dashboard" />
+            <Head title="Prodaja Dashboard" />
 
             <div className="container mx-auto p-6 space-y-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">Prodaja</h1>
                         <p className="text-muted-foreground">
-                            Upravljanje korisnicima i narudžbama
+                            Upravljanje narudžbama i statusima
                         </p>
                     </div>
-
+                    <Button
+                        variant="outline"
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="flex items-center gap-2"
+                    >
+                        <Filter className="h-4 w-4" />
+                        Filteri
+                    </Button>
                 </div>
 
-
-                {/* Stats Cards */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {/* Filters Panel */}
+                {showFilters && (
                     <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Ukupno korisnika
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Filter className="h-5 w-5" />
+                                Filteri narudžbi
                             </CardTitle>
-                            <Users className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.total_users}</div>
-                            <p className="text-xs text-muted-foreground">
-                                {stats.active_users} aktivnih
-                            </p>
-                        </CardContent>
-                    </Card>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="status">Status</Label>
+                                    <Select
+                                        value={localFilters.status}
+                                        onValueChange={(value) => handleFilterChange('status', value)}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {statusOptions.map((option) => (
+                                                <SelectItem key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Ukupno narudžbi
-                            </CardTitle>
-                            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.total_orders}</div>
-                            <p className="text-xs text-muted-foreground">
-                                {stats.pending_orders} na čekanju
-                            </p>
-                        </CardContent>
-                    </Card>
+                                <div className="space-y-2">
+                                    <Label htmlFor="date_from">Od datuma</Label>
+                                    <Input
+                                        type="date"
+                                        value={localFilters.date_from}
+                                        onChange={(e) => handleFilterChange('date_from', e.target.value)}
+                                    />
+                                </div>
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Ukupni prihod
-                            </CardTitle>
-                            <DollarSign className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">
-                                {formatCurrency(stats.total_revenue)}
+                                <div className="space-y-2">
+                                    <Label htmlFor="date_to">Do datuma</Label>
+                                    <Input
+                                        type="date"
+                                        value={localFilters.date_to}
+                                        onChange={(e) => handleFilterChange('date_to', e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="customer_search">Pretraga kupca</Label>
+                                    <Input
+                                        placeholder="Ime, email ili kompanija..."
+                                        value={localFilters.customer_search}
+                                        onChange={(e) => handleFilterChange('customer_search', e.target.value)}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-2 mt-4">
+                                <Button onClick={applyFilters}>
+                                    Primeni filtere
+                                </Button>
+                                <Button variant="outline" onClick={clearFilters}>
+                                    <X className="h-4 w-4 mr-1" />
+                                    Obriši filtere
+                                </Button>
                             </div>
                         </CardContent>
                     </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                Na čekanju
-                            </CardTitle>
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.pending_orders}</div>
-                            <p className="text-xs text-muted-foreground">
-                                narudžbi za obradu
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Users Table */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Users className="h-5 w-5" />
-                            Korisnici
-                        </CardTitle>
-                        <CardDescription>
-                            Pregled svih registrovanih korisnika
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Ime</TableHead>
-                                        <TableHead>Email</TableHead>
-                                        <TableHead>Kompanija</TableHead>
-                                        <TableHead>Telefon</TableHead>
-                                        <TableHead>JIB</TableHead>
-                                        <TableHead>Uloga</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Narudžbe</TableHead>
-                                        <TableHead>Registrovan</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {users.map((user) => (
-                                        <TableRow key={user.id}>
-                                            <TableCell className="font-medium">
-                                                {user.full_name}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-1">
-                                                    <Mail className="h-3 w-3 text-muted-foreground" />
-                                                    {user.email}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                {user.company_name && (
-                                                    <div className="flex items-center gap-1">
-                                                        <Building className="h-3 w-3 text-muted-foreground" />
-                                                        {user.company_name}
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                {user.phone && (
-                                                    <div className="flex items-center gap-1">
-                                                        <Phone className="h-3 w-3 text-muted-foreground" />
-                                                        {user.phone}
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>{user.jib}</TableCell>
-                                            <TableCell>
-                                                <Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>
-                                                    {user.role}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant={user.is_active ? 'default' : 'destructive'}>
-                                                    {user.is_active ? 'Aktivan' : 'Neaktivan'}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="outline">
-                                                    {user.orders_count}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                {formatDate(user.created_at)}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </CardContent>
-                </Card>
+                )}
 
                 {/* Orders Table */}
-
                 <Card>
                     <CardHeader>
-
                         <CardTitle className="flex items-center gap-2">
                             <ShoppingCart className="h-5 w-5" />
                             Narudžbe
                             <Badge variant="outline" className="ml-2">
                                 {orders.length} rezultata
                             </Badge>
-
                         </CardTitle>
                         <CardDescription>
-                            Pregled svih narudžbi u sistemu
+                            Pregled i upravljanje svim narudžbama
                         </CardDescription>
-
                     </CardHeader>
                     <CardContent>
-                        <Button
-                            variant="outline"
-                            onClick={() => setShowFilters(!showFilters)}
-                            className="flex items-center gap-2"
-                        >
-                            <Filter className="h-4 w-4" />
-                            Filteri
-                        </Button>
-
-                        {/* Filters Panel */}
-                        {showFilters && (
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Filter className="h-5 w-5" />
-                                        Filteri narudžbi
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="status">Status</Label>
-                                            <Select
-                                                value={localFilters.status}
-                                                onValueChange={(value) => handleFilterChange('status', value)}
-                                            >
-                                                <SelectTrigger>
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {statusOptions.map((option) => (
-                                                        <SelectItem key={option.value} value={option.value}>
-                                                            {option.label}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="date_from">Od datuma</Label>
-                                            <Input
-                                                type="date"
-                                                value={localFilters.date_from}
-                                                onChange={(e) => handleFilterChange('date_from', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="date_to">Do datuma</Label>
-                                            <Input
-                                                type="date"
-                                                value={localFilters.date_to}
-                                                onChange={(e) => handleFilterChange('date_to', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="customer_search">Pretraga kupca</Label>
-                                            <Input
-                                                placeholder="Ime, email ili kompanija..."
-                                                value={localFilters.customer_search}
-                                                onChange={(e) => handleFilterChange('customer_search', e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="flex gap-2 mt-4">
-                                        <Button onClick={applyFilters}>
-                                            Primeni filtere
-                                        </Button>
-                                        <Button variant="outline" onClick={clearFilters}>
-                                            <X className="h-4 w-4 mr-1" />
-                                            Obriši filtere
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        )}
                         <div className="rounded-md border">
-
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -534,7 +357,7 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            {statusOptions.slice(1).map((option) => (
+                                                            {statusOptions.map((option) => (
                                                                 <SelectItem key={option.value} value={option.value}>
                                                                     {option.label}
                                                                 </SelectItem>
