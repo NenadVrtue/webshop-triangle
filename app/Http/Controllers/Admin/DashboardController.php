@@ -5,11 +5,12 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Order;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Get all users with their order counts
         $users = User::withCount('orders')
@@ -31,8 +32,33 @@ class DashboardController extends Controller
             });
 
         // Get all orders with customer and items info
-        $orders = Order::with(['user', 'items'])
-            ->orderBy('created_at', 'desc')
+        $query = Order::with(['user', 'items']);
+
+        // Filter by status
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('status', $request->status);
+        }
+
+        // Filter by date range
+        if ($request->filled('date_from')) {
+            $query->whereDate('order_date', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('order_date', '<=', $request->date_to);
+        }
+
+        // Filter by customer search
+        if ($request->filled('customer_search')) {
+            $search = $request->customer_search;
+            $query->where(function($q) use ($search) {
+                $q->where('customer_name', 'like', '%' . $search . '%')
+                  ->orWhere('customer_email', 'like', '%' . $search . '%')
+                  ->orWhere('company_name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($order) {
                 return [
@@ -68,7 +94,26 @@ class DashboardController extends Controller
                 'total_orders' => $orders->count(),
                 'pending_orders' => $orders->where('status', 'pending')->count(),
                 'total_revenue' => $orders->sum('total'),
+            ],
+            'filters' => [
+                'status' => $request->status ?? 'all',
+                'date_from' => $request->date_from,
+                'date_to' => $request->date_to,
+                'customer_search' => $request->customer_search,
             ]
         ]);
+    }
+
+    public function updateOrderStatus(Request $request, Order $order)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled'
+        ]);
+
+        $order->update([
+            'status' => $request->status
+        ]);
+
+        return back()->with('success', 'Status narudžbe je uspešno ažuriran.');
     }
 }
