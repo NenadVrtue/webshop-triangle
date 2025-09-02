@@ -7,11 +7,12 @@ use App\Enums\Role;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected $fillable = [
         'company_name',
@@ -48,4 +49,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(Order::class);
     }
+    public function discounts()
+    {
+        return $this->hasMany(Discount::class);
+    }
+    public function promoCodes()
+    {
+        return $this->belongsToMany(PromoCode::class)
+            ->withPivot('used_at')
+            ->withTimestamps();
+    }
+
+
 }

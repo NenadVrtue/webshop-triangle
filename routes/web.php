@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -37,6 +38,11 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
         Route::patch('/orders/{order}/status', [AdminDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
     });
+
+Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+});
+
  // Sales routes (unprotected by role)
  Route::prefix('sales')
  ->as('sales.')
@@ -44,5 +50,6 @@ Route::middleware(['auth', 'verified', 'role:admin'])
      Route::get('/', [SalesDashboardController::class, 'index'])->name('dashboard');
      Route::patch('/orders/{order}/status', [SalesDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
  });
+
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
