@@ -43,13 +43,13 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
 });
 
- // Sales routes (unprotected by role)
- Route::prefix('sales')
- ->as('sales.')
- ->group(function () {
-     Route::get('/', [SalesDashboardController::class, 'index'])->name('dashboard');
-     Route::patch('/orders/{order}/status', [SalesDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
- });
+// Sales routes (unprotected by role)
+Route::prefix('sales')
+    ->as('sales.')
+    ->group(function () {
+        Route::get('/', [SalesDashboardController::class, 'index'])->name('dashboard');
+        Route::patch('/orders/{order}/status', [SalesDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
+    });
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

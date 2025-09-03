@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\ToUserOrder;
+use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\PromoCode;
 use App\Models\Tire;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Resources\OrderResource;
@@ -19,63 +22,117 @@ class OrderController extends Controller
         return Inertia::render('Checkout');
     }
 
+
     public function store(StoreOrderRequest $request)
     {
         $validated = $request->validated();
-        
-        // Calculate totals
+        $user = auth()->user();
+
+        // Izračunaj subtotal
         $subtotal = 0;
         foreach ($validated['items'] as $item) {
             $tire = Tire::findOrFail($item['tire_id']);
             $unitPrice = $tire->veleprodajna_cijena ?? 0;
             $subtotal += $unitPrice * $item['quantity'];
         }
-        
-        $discountAmount = $validated['discount'] ?? 0;
+
+        // Saberi sve popuste
+        $discountAmount  = $this->applyPromoCodeDiscount($validated, $user);
+        $discountAmount += $this->applyTireTypeDiscount($validated, $user);
+
+        // konačni total
         $total = $subtotal - $discountAmount;
 
-        // Create order
+        // Kreiraj order
         $order = Order::create([
-            'user_id' => auth()->id(),
-            'status' => 'pending',
-            'customer_name' => $validated['customer_name'],
-            'customer_email' => $validated['customer_email'],
-            'customer_phone' => $validated['customer_phone'] ?? null,
-            'company_name' => $validated['company_name'] ?? null,
-            'address' => $validated['address'] ?? null,
-            'city' => $validated['city'] ?? null,
-            'postal_code' => $validated['postal_code'] ?? null,
-            'notes' => $validated['notes'] ?? null,
-            'subtotal' => $subtotal,
+            'user_id'         => $user->id,
+            'status'          => 'pending',
+            'customer_name'   => $validated['customer_name'],
+            'customer_email'  => $validated['customer_email'],
+            'customer_phone'  => $validated['customer_phone'] ?? null,
+            'company_name'    => $validated['company_name'] ?? null,
+            'address'         => $validated['address'] ?? null,
+            'city'            => $validated['city'] ?? null,
+            'postal_code'     => $validated['postal_code'] ?? null,
+            'notes'           => $validated['notes'] ?? null,
+            'subtotal'        => $subtotal,
             'discount_amount' => $discountAmount,
-            'total' => $total,
-            'order_date' => now(),
+            'total'           => $total,
+            'order_date'      => now(),
         ]);
 
-        // Create order items
+        // Sačuvaj stavke
         foreach ($validated['items'] as $item) {
             $tire = Tire::findOrFail($item['tire_id']);
             $unitPrice = $tire->veleprodajna_cijena ?? 0;
             $totalPrice = $unitPrice * $item['quantity'];
 
             OrderItem::create([
-                'order_id' => $order->id,
-                'tire_id' => $tire->id,
-                'quantity' => $item['quantity'],
-                'unit_price' => $unitPrice,
+                'order_id'    => $order->id,
+                'tire_id'     => $tire->id,
+                'quantity'    => $item['quantity'],
+                'unit_price'  => $unitPrice,
                 'total_price' => $totalPrice,
             ]);
         }
 
-        // Send email notification
+        // Email notifikacije
         try {
             Mail::to(config('mail.admin_email', 'nenadvrtue@gmail.com'))->send(new OrderCreated($order));
+            Mail::to($order['customer_email'])->send(new ToUserOrder($order));
         } catch (\Exception $e) {
             \Log::error('Failed to send order email: ' . $e->getMessage());
         }
 
         return redirect()->route('orders.success', $order)->with('success', 'Narudžba je uspješno kreirana!');
     }
+
+    /**
+     * Primjena promo koda
+     */
+    protected function applyPromoCodeDiscount(array $validated, $user): float
+    {
+        $discount = 0;
+
+        if (!empty($validated['promo_code'])) {
+            $promo = PromoCode::where('code', $validated['promo_code'])->first();
+
+            if ($promo && !$promo->isExpired()) {
+                if (!$user->promoCodes()->where('promo_code_id', $promo->id)->exists()) {
+                    $discount += $promo->discount;
+                    $user->promoCodes()->attach($promo->id, ['used_at' => now()]);
+                }
+            }
+        }
+
+        return $discount;
+    }
+
+    /**
+     * Primjena popusta po tipu gume
+     */
+    protected function applyTireTypeDiscount(array $validated, $user): float
+    {
+        $discountAmount = 0;
+
+        foreach ($validated['items'] as $item) {
+            $tire = Tire::findOrFail($item['tire_id']);
+            $unitPrice = $tire->veleprodajna_cijena ?? 0;
+            $lineTotal = $unitPrice * $item['quantity'];
+
+            $discount = Discount::where('user_id', $user->id)
+                ->where('tire_type', $tire->tip)
+                ->first();
+
+            if ($discount) {
+                $lineDiscount = $lineTotal * ($discount->percentage / 100);
+                $discountAmount += $lineDiscount;
+            }
+        }
+
+        return $discountAmount;
+    }
+
 
     public function index()
     {
@@ -102,7 +159,7 @@ class OrderController extends Controller
     {
         // Load order with items and tire details
         $order->load(['items.tire', 'user']);
-        
+
         return Inertia::render('Orders/Success', [
             'order' => [
                 'id' => $order->id,
@@ -140,4 +197,13 @@ class OrderController extends Controller
             ]
         ]);
     }
+    public function markAsDone(Order $order)
+    {
+        $order->update([
+            'status' => 'done'
+        ]);
+
+        return redirect()->back()->with('success', 'Status narudžbe je postavljen na DONE.');
+    }
+
 }
