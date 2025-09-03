@@ -19,9 +19,12 @@ class RoleMiddleware
         }
 
         $user = auth()->user();
-        
+
         // Check if user has the required role
         if ($role === 'admin' && !$user->isAdmin()) {
+            abort(403, 'Nemate dozvolu za pristup ovoj stranici.');
+        }
+        if ($role === 'sales' && !$user->isSales()) {
             abort(403, 'Nemate dozvolu za pristup ovoj stranici.');
         }
 

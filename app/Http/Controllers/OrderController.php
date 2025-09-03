@@ -197,13 +197,18 @@ class OrderController extends Controller
             ]
         ]);
     }
-    public function markAsDone(Order $order)
+    public function updateStatus(Request $request, Order $order)
     {
-        $order->update([
-            'status' => 'done'
+        $request->validate([
+            'status' => 'required|string|in:pending,processing,done,cancelled'
         ]);
 
-        return redirect()->back()->with('success', 'Status narudžbe je postavljen na DONE.');
+        $order->update([
+            'status' => $request->status
+        ]);
+
+        return redirect()->back()->with('success', "Status narudžbe je postavljen na {$request->status}.");
     }
+
 
 }

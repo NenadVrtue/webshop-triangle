@@ -44,6 +44,10 @@ class User extends Authenticatable
     {
         return $this->role === Role::Admin;
     }
+    public function isSales(): bool
+    {
+        return $this->role === Role::Sales;
+    }
 
     public function orders()
     {
@@ -58,6 +62,10 @@ class User extends Authenticatable
         return $this->belongsToMany(PromoCode::class)
             ->withPivot('used_at')
             ->withTimestamps();
+    }
+    public function delete()
+    {
+        $this->is_active = false;
     }
 
 }

@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\PromoCodeController;
+use App\Models\Discount;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -41,6 +44,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])
 
 Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    Route::get('/promocodes', [PromoCodeController::class, 'index'])->name('promocodes.index');
+    Route::post('/promocodes', [PromoCodeController::class, 'store'])->name('promocodes.store');
+    Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.index');
+    Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');
 });
 
 // Sales routes (unprotected by role)
@@ -50,6 +59,12 @@ Route::prefix('sales')
         Route::get('/', [SalesDashboardController::class, 'index'])->name('dashboard');
         Route::patch('/orders/{order}/status', [SalesDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
     });
+
+Route::middleware(['auth', 'verified', 'role:sales'])->group(function () {
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+
+});
 
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
