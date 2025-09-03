@@ -134,12 +134,19 @@ class OrderController extends Controller
     }
 
 
-    public function index()
+    public function index(Request $request)
     {
-        $orders = Order::where('user_id', auth()->id())
+        $query = Order::where('user_id', auth()->id());
+
+        // Ako je poslan status u query parametru, filtriraj
+        if ($request->filled('status') && in_array($request->status, ['pending','processing','done','cancelled'])) {
+            $query->where('status', $request->status);
+        }
+
+        $orders = $query
             ->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($order) {
+            ->paginate(10) // broj po stranici
+            ->through(function ($order) {
                 return [
                     'id' => $order->id,
                     'order_date' => $order->order_date,
@@ -151,9 +158,13 @@ class OrderController extends Controller
             });
 
         return Inertia::render('Orders/Index', [
-            'orders' => $orders
+            'orders' => $orders,
+            'filters' => [
+                'status' => $request->status,
+            ],
         ]);
     }
+
 
     public function success(Order $order)
     {
