@@ -63,9 +63,14 @@ class User extends Authenticatable
             ->withPivot('used_at')
             ->withTimestamps();
     }
-    public function delete()
+    public function softDelete()
     {
         $this->is_active = false;
+        $this->save();
+    }
+    public function delete()
+    {
+        parent::delete();
     }
 
 }

@@ -24,7 +24,7 @@ class DashboardController extends Controller
                     'company_name' => $user->company_name,
                     'phone' => $user->phone,
                     'jib' => $user->jib,
-                    'role' => $user->role->name,
+                    'role' => $user->role->value,
                     'is_active' => $user->is_active,
                     'orders_count' => $user->orders_count,
                     'created_at' => $user->created_at,
