@@ -47,6 +47,7 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::post('/users', [UserController::class, 'store'])->name('users.store');
     Route::get('/users/{user}', [UserController::class, 'show'])->name('users.show');
     Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::patch('/users/{user}/soft-delete', [UserController::class, 'softDelete'])->name('users.soft-delete');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::get('/promocodes', [PromoCodeController::class, 'index'])->name('promocodes.index');
     Route::post('/promocodes', [PromoCodeController::class, 'store'])->name('promocodes.store');

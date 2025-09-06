@@ -44,7 +44,8 @@ import {
     X,
     Plus,
     Trash2,
-    UserPlus
+    UserPlus,
+    UserMinus
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -360,6 +361,25 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
         }
     };
 
+    const handleSoftDeleteUser = async (user: User) => {
+        try {
+            await router.patch(`/users/${user.id}`, {
+                is_active: false
+            }, {
+                onSuccess: () => {
+                    toast.success('Korisnik je uspešno deaktiviran');
+                },
+                onError: (error) => {
+                    console.error('Error deactivating user:', error);
+                    toast.error('Greška pri deaktiviranju korisnika');
+                }
+            });
+        } catch (error) {
+            console.error('Error deactivating user:', error);
+            toast.error('Došlo je do greške');
+        }
+    };
+
     const statusOptions = [
         { value: 'all', label: 'Svi statusi' },
         { value: 'pending', label: 'Na čekanju' },
@@ -540,6 +560,7 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
                                                     >
                                                         <Edit className="h-3 w-3" />
                                                     </Button>
+
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
@@ -917,19 +938,39 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
                             Ova akcija se ne može poništiti.
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter>
+                    <DialogFooter className="flex gap-2">
                         <Button
                             type="button"
                             variant="outline"
-                            onClick={() => setUserToDelete(null)}
+                            onClick={() => {
+                                setShowDeleteDialog(false);
+                                setUserToDelete(null);
+                            }}
                         >
                             Otkaži
                         </Button>
+                        {userToDelete?.is_active ? (
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    if (userToDelete) {
+                                        handleSoftDeleteUser(userToDelete);
+                                        setShowDeleteDialog(false);
+                                        setUserToDelete(null);
+                                    }
+                                }}
+                                className="bg-orange-600 text-white hover:bg-orange-700"
+                            >
+                                <UserMinus className="h-4 w-4 mr-1" />
+                                Deaktiviraj
+                            </Button>
+                        ) : null}
                         <Button
                             type="button"
                             onClick={confirmDeleteUser}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
+                            <Trash2 className="h-4 w-4 mr-1" />
                             Obriši
                         </Button>
                     </DialogFooter>
