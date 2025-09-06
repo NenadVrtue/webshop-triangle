@@ -83,9 +83,8 @@ class UserController extends Controller
             'is_active'    => (bool) $validated['is_active'],
         ]);
 
-        return (new UserResource($user))
-            ->response()
-            ->setStatusCode(Response::HTTP_CREATED);
+        // For Inertia.js, redirect back to admin dashboard
+        return redirect()->route('admin.dashboard')->with('success', 'Korisnik je uspešno kreiran');
     }
 
     public function show(User $user)
@@ -110,18 +109,33 @@ class UserController extends Controller
         $user->fill($validated);
         $user->save();
 
-        return new UserResource($user);
+        // For Inertia.js, redirect back to admin dashboard
+        return redirect()->route('admin.dashboard')->with('success', 'Korisnik je uspešno ažuriran');
     }
 
     public function destroy(Request $request, User $user)
     {
         // Ne dozvoli brisanje samog sebe
         if ((int) $request->user()->id === (int) $user->id) {
-            return response()->json(['message' => 'Ne možete obrisati vlastiti nalog.'], 422);
+            return redirect()->route('admin.dashboard')->with('error', 'Ne možete obrisati vlastiti nalog.');
         }
 
         $user->delete();
 
-        return response()->noContent();
+        // For Inertia.js, redirect back to admin dashboard
+        return redirect()->route('admin.dashboard')->with('success', 'Korisnik je uspešno obrisan');
+    }
+
+    public function softDelete(Request $request, User $user)
+    {
+        // Ne dozvoli deaktiviranje samog sebe
+        if ((int) $request->user()->id === (int) $user->id) {
+            return redirect()->route('admin.dashboard')->with('error', 'Ne možete deaktivirati vlastiti nalog.');
+        }
+
+        $user->softDelete();
+
+        // For Inertia.js, redirect back to admin dashboard
+        return redirect()->route('admin.dashboard')->with('success', 'Korisnik je uspešno deaktiviran');
     }
 }
