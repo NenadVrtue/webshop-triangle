@@ -21,12 +21,19 @@ class UserUpdateRequest extends FormRequest
         return [
             'company_name' => ['sometimes', 'required', 'string', 'max:255'],
             'email'        => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
-            'jib'          => ['sometimes', 'nullable', 'string', 'max:50'],
+            'jib'          => ['sometimes', 'nullable', 'string', 'max:50', Rule::unique('users', 'jib')->ignore($userId)],
             'full_name'    => ['sometimes', 'required', 'string', 'max:255'],
             'phone'        => ['sometimes', 'nullable', 'string', 'max:50'],
             'password'     => ['sometimes', 'nullable', 'string', 'min:8'],
             'role'         => ['sometimes', 'required', new Enum(Role::class)],
             'is_active'    => ['sometimes', 'required', 'boolean'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'jib.unique' => 'JIB već postoji u sistemu. Molimo provjerite i unesite drugi JIB.',
         ];
     }
 }

@@ -55,7 +55,7 @@ interface User {
     company_name?: string;
     phone?: string;
     jib?: string;
-    role: string;
+    role: number;
     is_active: boolean;
     orders_count: number;
     created_at: string;
@@ -111,7 +111,7 @@ interface UserFormData {
     phone: string;
     jib: string;
     password: string;
-    role: string;
+    role: number;
     is_active: boolean;
 }
 
@@ -179,14 +179,14 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
         phone: '',
         jib: '',
         password: '',
-        role: 'User',
+        role: 0,
         is_active: true,
     });
 
     const roleOptions = [
-        { value: 'User', label: 'Korisnik' },
-        { value: 'Sales', label: 'Prodaja' },
-        { value: 'Admin', label: 'Administrator' },
+        { value: 0, label: 'Korisnik' },
+        { value: 1, label: 'Administrator' },
+        { value: 2, label: 'Prodaja' },
     ];
 
     const handleStatusUpdate = async (orderId: number, newStatus: string) => {
@@ -245,7 +245,7 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
             phone: '',
             jib: '',
             password: '',
-            role: 'User',
+            role: 0,
             is_active: true,
         });
         setShowUserModal(true);
@@ -266,7 +266,7 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
         setShowUserModal(true);
     };
 
-    const handleUserFormChange = (field: keyof UserFormData, value: string | boolean) => {
+    const handleUserFormChange = (field: keyof UserFormData, value: string | boolean | number) => {
         setUserFormData(prev => ({
             ...prev,
             [field]: value
@@ -290,7 +290,7 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
             if (!submitData.jib) delete (submitData as any).jib;
 
             if (editingUser) {
-                router.put(`/users/${editingUser.id}`, submitData, {
+                router.patch(`/users/${editingUser.id}`, submitData, {
                     onSuccess: () => {
                         toast.success('Korisnik je uspešno ažuriran');
                         setShowUserModal(false);
@@ -514,7 +514,7 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
                                             </TableCell>
                                             <TableCell>{user.jib}</TableCell>
                                             <TableCell>
-                                                <Badge variant={user.role === 'Admin' ? 'default' : 'secondary'}>
+                                                <Badge variant={user.role === 1 ? 'default' : 'secondary'}>
                                                     {roleOptions.find(r => r.value === user.role)?.label || user.role}
                                                 </Badge>
                                             </TableCell>
@@ -849,15 +849,15 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
                             <div className="space-y-2">
                                 <Label htmlFor="role">Uloga *</Label>
                                 <Select
-                                    value={userFormData.role}
-                                    onValueChange={(value) => handleUserFormChange('role', value)}
+                                    value={userFormData.role.toString()}
+                                    onValueChange={(value) => handleUserFormChange('role', parseInt(value))}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue />
+                                        <SelectValue placeholder="Izaberite ulogu" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {roleOptions.map((option) => (
-                                            <SelectItem key={option.value} value={option.value}>
+                                            <SelectItem key={option.value} value={option.value.toString()}>
                                                 {option.label}
                                             </SelectItem>
                                         ))}

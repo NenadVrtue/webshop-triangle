@@ -83,9 +83,8 @@ class UserController extends Controller
             'is_active'    => (bool) $validated['is_active'],
         ]);
 
-        return (new UserResource($user))
-            ->response()
-            ->setStatusCode(Response::HTTP_CREATED);
+        // For Inertia.js, redirect back to admin dashboard
+        return redirect()->route('admin.dashboard')->with('success', 'Korisnik je uspešno kreiran');
     }
 
     public function show(User $user)
@@ -110,7 +109,8 @@ class UserController extends Controller
         $user->fill($validated);
         $user->save();
 
-        return new UserResource($user);
+        // For Inertia.js, redirect back to admin dashboard
+        return redirect()->route('admin.dashboard')->with('success', 'Korisnik je uspešno ažuriran');
     }
 
     public function destroy(Request $request, User $user)
