@@ -111,6 +111,17 @@ return [
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
+        'mssql' => [
+            'driver' => 'sqlsrv',
+            'host' => env('MSSQL_HOST', '127.0.0.1'),
+            'port' => env('MSSQL_PORT', '1433'),
+            'database' => env('MSSQL_DATABASE', 'forge'),
+            'username' => env('MSSQL_USERNAME', 'forge'),
+            'password' => env('MSSQL_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+        ],
+
 
     ],
 
