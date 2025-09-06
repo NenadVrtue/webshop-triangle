@@ -53,12 +53,12 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
 });
 
 // Sales routes (unprotected by role)
-Route::prefix('sales')
-    ->as('sales.')
-    ->group(function () {
-        Route::get('/', [SalesDashboardController::class, 'index'])->name('dashboard');
-        Route::patch('/orders/{order}/status', [SalesDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
-    });
+// Route::prefix('sales')
+//     ->as('sales.')
+//     ->group(function () {
+//         Route::get('/', [SalesDashboardController::class, 'index'])->name('dashboard');
+//         Route::patch('/orders/{order}/status', [SalesDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
+//     });
 
 Route::middleware(['auth', 'verified', 'role:sales'])->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
