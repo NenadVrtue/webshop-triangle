@@ -18,6 +18,10 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
+Route::get('/contact', function () {
+    return Inertia::render('Contact');
+})->name('contact');
+
 Route::post('/login', [AuthenticatedSessionController::class, 'store']);
 
 Route::middleware(['auth', 'verified'])->group(function () {
