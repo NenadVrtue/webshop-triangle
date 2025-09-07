@@ -13,8 +13,9 @@ class PromoCode extends Model
         'discount',
     ];
 
-    protected $dates = [
-        'expires_at',
+    protected $casts = [
+        'expires_at' => 'date',
+        'discount' => 'decimal:2',
     ];
 
     public function users(): BelongsToMany

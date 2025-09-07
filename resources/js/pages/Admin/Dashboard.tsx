@@ -29,6 +29,7 @@ import {
     Trash2,
     Eye,
     X,
+    Plus,
     UserMinus
 } from 'lucide-react';
 
@@ -82,6 +83,16 @@ interface Tire {
     updated_at: string;
 }
 
+interface PromoCode {
+    id: number;
+    code: string;
+    discount: number;
+    expires_at: string;
+    is_expired: boolean;
+    usage_count: number;
+    created_at: string;
+}
+
 interface Stats {
     total_users: number;
     active_users: number;
@@ -94,6 +105,7 @@ interface Props {
     users: User[];
     orders: Order[];
     tires: Tire[];
+    promoCodes: PromoCode[];
     stats: Stats;
     filters?: {
         status?: string;
@@ -112,6 +124,12 @@ interface UserFormData {
     password: string;
     role: number;
     is_active: boolean;
+}
+
+interface PromoCodeFormData {
+    code: string;
+    discount: string;
+    expires_at: string;
 }
 
 const getStatusBadgeVariant = (status: string) => {
@@ -233,7 +251,88 @@ const createAdminTireColumns = (
         },
     ];
 
-export default function AdminDashboard({ users, orders, tires = [], stats, filters = {} }: Props) {
+const createAdminPromoCodeColumns = (
+    handleEditPromoCode: (promoCode: PromoCode) => void,
+    handleDeletePromoCode: (promoCode: PromoCode) => void
+): ColumnDef<PromoCode>[] => [
+        {
+            accessorKey: "code",
+            header: "Kod",
+            cell: ({ row }) => (
+                <div className="font-mono font-semibold">{row.getValue("code")}</div>
+            ),
+        },
+        {
+            accessorKey: "discount",
+            header: "Popust",
+            cell: ({ row }) => (
+                <div>{formatCurrency(row.getValue("discount"))}</div>
+            ),
+        },
+        {
+            accessorKey: "expires_at",
+            header: "Ističe",
+            cell: ({ row }) => (
+                <div>{row.getValue("expires_at") || 'Bez isteka'}</div>
+            ),
+        },
+        {
+            accessorKey: "is_expired",
+            header: "Status",
+            cell: ({ row }) => {
+                const isExpired = row.getValue("is_expired") as boolean;
+                return (
+                    <Badge variant={isExpired ? 'destructive' : 'default'}>
+                        {isExpired ? 'Istekao' : 'Aktivan'}
+                    </Badge>
+                );
+            },
+        },
+        {
+            accessorKey: "usage_count",
+            header: "Upotreba",
+            cell: ({ row }) => (
+                <div className="flex items-center">
+                    <Users className="w-4 h-4 mr-1" />
+                    {row.getValue("usage_count")}
+                </div>
+            ),
+        },
+        {
+            accessorKey: "created_at",
+            header: "Kreiran",
+            cell: ({ row }) => (
+                <div>{row.getValue("created_at")}</div>
+            ),
+        },
+        {
+            id: "actions",
+            header: "Akcije",
+            cell: ({ row }) => {
+                const promoCode = row.original;
+                return (
+                    <div className="flex space-x-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditPromoCode(promoCode)}
+                        >
+                            <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeletePromoCode(promoCode)}
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </Button>
+                    </div>
+                );
+            },
+        },
+    ];
+
+export default function AdminDashboard({ users, orders, tires = [], promoCodes = [], stats, filters = {} }: Props) {
     const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
     const [updatingTire, setUpdatingTire] = useState<number | null>(null);
     const [showFilters, setShowFilters] = useState(false);
@@ -259,6 +358,14 @@ export default function AdminDashboard({ users, orders, tires = [], stats, filte
         password: '',
         role: 0,
         is_active: true,
+    });
+
+    const [showPromoCodeModal, setShowPromoCodeModal] = useState(false);
+    const [editingPromoCode, setEditingPromoCode] = useState<PromoCode | null>(null);
+    const [promoCodeFormData, setPromoCodeFormData] = useState<PromoCodeFormData>({
+        code: '',
+        discount: '',
+        expires_at: '',
     });
 
     const roleOptions = [
@@ -486,6 +593,97 @@ export default function AdminDashboard({ users, orders, tires = [], stats, filte
         }
     };
 
+    const handleEditPromoCode = (promoCode: PromoCode) => {
+        setEditingPromoCode(promoCode);
+        setPromoCodeFormData({
+            code: promoCode.code,
+            discount: promoCode.discount.toString(),
+            expires_at: promoCode.expires_at || '',
+        });
+        setShowPromoCodeModal(true);
+    };
+
+    const openCreatePromoCodeModal = () => {
+        setEditingPromoCode(null);
+        setPromoCodeFormData({
+            code: '',
+            discount: '',
+            expires_at: '',
+        });
+        setShowPromoCodeModal(true);
+    };
+
+    const handleDeletePromoCode = (promoCode: PromoCode) => {
+        if (confirm(`Da li ste sigurni da želite da obrišete promo kod ${promoCode.code}?`)) {
+            router.delete(`/promocodes/${promoCode.id}`, {
+                onSuccess: () => {
+                    toast.success('Promo kod je uspešno obrisan');
+                },
+                onError: (error) => {
+                    console.error('Delete error:', error);
+                    toast.error('Greška pri brisanju promo koda');
+                }
+            });
+        }
+    };
+
+    const handlePromoCodeFormChange = (field: keyof PromoCodeFormData, value: string | boolean | number) => {
+        setPromoCodeFormData(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handlePromoCodeSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            const submitData = {
+                ...promoCodeFormData,
+                discount: parseFloat(promoCodeFormData.discount)
+            };
+
+            if (editingPromoCode) {
+                router.patch(`/promocodes/${editingPromoCode.id}`, submitData, {
+                    onSuccess: () => {
+                        toast.success('Promo kod je uspešno ažuriran');
+                        setShowPromoCodeModal(false);
+                    },
+                    onError: (errors) => {
+                        console.error('Validation errors:', errors);
+                        Object.entries(errors).forEach(([field, messages]) => {
+                            if (Array.isArray(messages)) {
+                                messages.forEach(message => toast.error(`${field}: ${message}`));
+                            } else {
+                                toast.error(`${field}: ${messages}`);
+                            }
+                        });
+                    }
+                });
+            } else {
+                router.post('/promocodes', submitData, {
+                    onSuccess: () => {
+                        toast.success('Promo kod je uspešno kreiran');
+                        setShowPromoCodeModal(false);
+                    },
+                    onError: (errors) => {
+                        console.error('Validation errors:', errors);
+                        Object.entries(errors).forEach(([field, messages]) => {
+                            if (Array.isArray(messages)) {
+                                messages.forEach(message => toast.error(`${field}: ${message}`));
+                            } else {
+                                toast.error(`${field}: ${messages}`);
+                            }
+                        });
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error submitting promo code:', error);
+            toast.error('Došlo je do greške');
+        }
+    };
+
     const statusOptions = [
         { value: 'all', label: 'Svi statusi' },
         { value: 'pending', label: 'Na čekanju' },
@@ -497,6 +695,7 @@ export default function AdminDashboard({ users, orders, tires = [], stats, filte
     ];
 
     const adminTireColumns = createAdminTireColumns(updatingTire, handleToggleActive);
+    const adminPromoCodeColumns = createAdminPromoCodeColumns(handleEditPromoCode, handleDeletePromoCode);
 
     return (
         <AppLayout>
@@ -700,6 +899,67 @@ export default function AdminDashboard({ users, orders, tires = [], stats, filte
                             columns={adminTireColumns}
                             data={tires}
                         />
+                    </CardContent>
+                </Card>
+
+                {/* Promo Code Management Section */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle>Upravljanje promo kodovima</CardTitle>
+                                <CardDescription>
+                                    Pregled i upravljanje promo kodovima
+                                </CardDescription>
+                            </div>
+                            <Button onClick={openCreatePromoCodeModal} className="flex items-center gap-2">
+                                <Plus className="h-4 w-4" />
+                                Dodaj promo kod
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Kod</TableHead>
+                                        <TableHead>Popust</TableHead>
+                                        <TableHead>Akcije</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {promoCodes.map((promoCode) => (
+                                        <TableRow key={promoCode.id}>
+                                            <TableCell className="font-mono font-semibold">
+                                                {promoCode.code}
+                                            </TableCell>
+                                            <TableCell>
+                                                {formatCurrency(promoCode.discount)}
+                                            </TableCell>
+                                            <TableCell>
+                                                <div className="flex space-x-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleEditPromoCode(promoCode)}
+                                                    >
+                                                        <Edit className="w-4 h-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleDeletePromoCode(promoCode)}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -1045,6 +1305,70 @@ export default function AdminDashboard({ users, orders, tires = [], stats, filte
                             </Button>
                             <Button type="submit" disabled={isSubmitting}>
                                 {isSubmitting ? 'Čuva se...' : (editingUser ? 'Ažuriraj' : 'Kreiraj')}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Promo Code Create/Edit Modal */}
+            <Dialog open={showPromoCodeModal} onOpenChange={setShowPromoCodeModal}>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {editingPromoCode ? 'Uredi promo kod' : 'Dodaj novi promo kod'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {editingPromoCode
+                                ? 'Ažuriraj informacije o promo kodu'
+                                : 'Unesite informacije za novi promo kod'
+                            }
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handlePromoCodeSubmit} className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="code">Kod *</Label>
+                                <Input
+                                    id="code"
+                                    value={promoCodeFormData.code}
+                                    onChange={(e) => handlePromoCodeFormChange('code', e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="discount">Popust *</Label>
+                                <Input
+                                    id="discount"
+                                    type="number"
+                                    value={promoCodeFormData.discount}
+                                    onChange={(e) => handlePromoCodeFormChange('discount', e.target.value)}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="expires_at">Ističe</Label>
+                            <Input
+                                id="expires_at"
+                                type="date"
+                                value={promoCodeFormData.expires_at}
+                                onChange={(e) => handlePromoCodeFormChange('expires_at', e.target.value)}
+                            />
+                        </div>
+
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setShowPromoCodeModal(false)}
+                            >
+                                Otkaži
+                            </Button>
+                            <Button type="submit">
+                                {editingPromoCode ? 'Ažuriraj' : 'Kreiraj'}
                             </Button>
                         </DialogFooter>
                     </form>

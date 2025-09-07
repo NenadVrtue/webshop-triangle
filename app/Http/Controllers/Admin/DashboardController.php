@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Tire;
+use App\Models\PromoCode;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -106,10 +107,27 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Get promo codes with usage counts
+        $promoCodes = PromoCode::withCount('users')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($promoCode) {
+                return [
+                    'id' => $promoCode->id,
+                    'code' => $promoCode->code,
+                    'discount' => (float) $promoCode->discount,
+                    'expires_at' => $promoCode->expires_at ? $promoCode->expires_at->format('d.m.Y') : null,
+                    'is_expired' => $promoCode->isExpired(),
+                    'usage_count' => $promoCode->users_count,
+                    'created_at' => $promoCode->created_at->format('d.m.Y H:i'),
+                ];
+            });
+
         return Inertia::render('Admin/Dashboard', [
             'users' => $users,
             'orders' => $orders,
             'tires' => $tires,
+            'promoCodes' => $promoCodes,
             'stats' => [
                 'total_users' => $users->count(),
                 'active_users' => $users->where('is_active', true)->count(),
