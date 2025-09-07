@@ -10,6 +10,7 @@ return new class extends Migration {
         Schema::create('promo_codes', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique(); // vrijednost promo koda
+            $table->decimal('discount', 8, 2)->default(0); // iznos popusta
             $table->date('expires_at')->nullable(); // datum važenja
             $table->timestamps();
         });
