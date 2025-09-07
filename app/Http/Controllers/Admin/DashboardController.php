@@ -150,7 +150,7 @@ class DashboardController extends Controller
     public function updateOrderStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|in:pending,confirmed,processing,shipped,delivered,cancelled'
+            'status' => 'required|in:pending,processing,done,cancelled'
         ]);
 
         $order->update([

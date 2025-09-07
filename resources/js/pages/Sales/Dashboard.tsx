@@ -68,10 +68,8 @@ interface Props {
 const getStatusBadgeVariant = (status: string) => {
     switch (status) {
         case 'pending': return 'secondary';
-        case 'confirmed': return 'default';
         case 'processing': return 'outline';
-        case 'shipped': return 'default';
-        case 'delivered': return 'default';
+        case 'done': return 'default';
         case 'cancelled': return 'destructive';
         default: return 'secondary';
     }
@@ -80,11 +78,9 @@ const getStatusBadgeVariant = (status: string) => {
 const getStatusLabel = (status: string) => {
     switch (status) {
         case 'pending': return 'Na čekanju';
-        case 'confirmed': return 'Potvrđeno';
-        case 'processing': return 'U obradi';
-        case 'shipped': return 'Poslano';
-        case 'delivered': return 'Dostavljeno';
-        case 'cancelled': return 'Otkazano';
+        case 'processing': return 'U procesu';
+        case 'done': return 'Završena';
+        case 'cancelled': return 'Otkazana';
         default: return status;
     }
 };
@@ -165,11 +161,9 @@ export default function SalesDashboard({ orders, filters }: Props) {
     const statusOptions = [
         { value: 'all', label: 'Svi statusi' },
         { value: 'pending', label: 'Na čekanju' },
-        { value: 'confirmed', label: 'Potvrđeno' },
-        { value: 'processing', label: 'U obradi' },
-        { value: 'shipped', label: 'Poslano' },
-        { value: 'delivered', label: 'Dostavljeno' },
-        { value: 'cancelled', label: 'Otkazano' },
+        { value: 'processing', label: 'U procesu' },
+        { value: 'done', label: 'Završena' },
+        { value: 'cancelled', label: 'Otkazana' },
     ];
 
     return (
