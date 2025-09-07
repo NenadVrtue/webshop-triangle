@@ -32,7 +32,15 @@ interface Order {
 }
 
 interface OrdersIndexProps {
-    orders: Order[];
+    orders: {
+        data: Order[];
+        total: number;
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        from: number;
+        to: number;
+    };
 }
 
 export default function Index({ orders }: OrdersIndexProps) {
@@ -91,11 +99,11 @@ export default function Index({ orders }: OrdersIndexProps) {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Package className="h-5 w-5" />
-                            Narudžbe ({orders.length})
+                            Narudžbe ({orders.data.length})
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="px-2 xl:px-4">
-                        {orders.length > 0 ? (
+                        {orders.data.length > 0 ? (
                             <Table>
                                 <TableHeader className="bg-background-alt dark:bg-primary ">
                                     <TableRow className=''>
@@ -108,7 +116,7 @@ export default function Index({ orders }: OrdersIndexProps) {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {orders.map((order) => (
+                                    {orders.data.map((order) => (
                                         <TableRow key={order.id}>
                                             <TableCell className="font-medium">
                                                 #{order.id}
