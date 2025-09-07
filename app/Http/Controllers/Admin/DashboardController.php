@@ -105,9 +105,8 @@ class DashboardController extends Controller
                     'nabavna_cijena' => 0, // Not in model fillable yet
                     'kolicina_na_stanju' => $tire->kolicina_na_stanju ?? 0,
                     'sezona' => $tire->sezona ?? 'N/A',
+                    'kategorija' => $tire->kategorija ?? 'N/A',
                     'is_active' => $tire->is_active ?? true,
-                    'created_at' => $tire->created_at,
-                    'updated_at' => $tire->updated_at,
                 ];
             });
 

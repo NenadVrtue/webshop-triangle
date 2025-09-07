@@ -151,7 +151,7 @@ export function CartSheet({
                                                     <Trash2 className="h-4 w-4" />
                                                 </Button>
                                                 <div className="flex-1 pr-6 ">
-                                                    <h4 className="font-medium ">{item.tire.naziv}</h4>
+                                                    <h4 className="font-medium ">{item.tire.ime}</h4>
                                                     <p className="text-sm text-gray-600 dark:text-foreground">
                                                         Šifra: {item.tire.sifra}
                                                     </p>

@@ -32,7 +32,7 @@ class OrderController extends Controller
         $subtotal = 0;
         foreach ($validated['items'] as $item) {
             $tire = Tire::findOrFail($item['tire_id']);
-            $unitPrice = $tire->veleprodajna_cijena ?? 0;
+            $unitPrice = $tire->vp_cijena ?? 0;
             $subtotal += $unitPrice * $item['quantity'];
         }
 
@@ -64,7 +64,7 @@ class OrderController extends Controller
         // Sačuvaj stavke
         foreach ($validated['items'] as $item) {
             $tire = Tire::findOrFail($item['tire_id']);
-            $unitPrice = $tire->veleprodajna_cijena ?? 0;
+            $unitPrice = $tire->vp_cijena ?? 0;
             $totalPrice = $unitPrice * $item['quantity'];
 
             OrderItem::create([
@@ -117,7 +117,7 @@ class OrderController extends Controller
 
         foreach ($validated['items'] as $item) {
             $tire = Tire::findOrFail($item['tire_id']);
-            $unitPrice = $tire->veleprodajna_cijena ?? 0;
+            $unitPrice = $tire->vp_cijena ?? 0;
             $lineTotal = $unitPrice * $item['quantity'];
 
             $discount = Discount::where('user_id', $user->id)
@@ -197,7 +197,7 @@ class OrderController extends Controller
                         'tire' => $item->tire ? [
                             'id' => $item->tire->id,
                             'sifra' => $item->tire->sifra,
-                            'naziv' => $item->tire->naziv,
+                            'ime' => $item->tire->ime,
                             'tip' => $item->tire->tip,
                             'dimenzije' => $item->tire->dimenzije,
                             'brend' => $item->tire->brend,

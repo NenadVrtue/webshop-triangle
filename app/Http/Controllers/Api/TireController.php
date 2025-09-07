@@ -34,7 +34,7 @@ class TireController extends Controller
     {
         $validated = $request->validate([
             'sifra' => 'required|string|max:255',
-            'naziv' => 'required|string|max:255',
+            'ime' => 'required|string|max:255',
         ]);
 
         $tire = Tire::create($validated + ['is_active' => true]);
@@ -50,7 +50,7 @@ class TireController extends Controller
     {
         $validated = $request->validate([
             'sifra' => 'sometimes|string|max:255',
-            'naziv' => 'sometimes|string|max:255',
+            'ime' => 'sometimes|string|max:255',
             'is_active' => 'sometimes|boolean',
         ]);
 

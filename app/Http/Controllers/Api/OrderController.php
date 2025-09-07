@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\Api;
-namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
@@ -42,7 +41,7 @@ class OrderController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $tire = Tire::findOrFail($item['tire_id']);
-                $unitPrice = $tire->price;
+                $unitPrice = $tire->veleprodajna_cijena ?? 0;
                 $total = $unitPrice * $item['quantity'];
 
                 OrderItem::create([
