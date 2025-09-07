@@ -39,7 +39,7 @@ Primili smo novu narudžbu od kupca **{{ $order->customer_name }}**.
 | Proizvod | Šifra | Količina | Cijena | Ukupno |
 |:---------|:------|:---------|:-------|:--------|
 @foreach($order->items as $item)
-| {{ $item->tire->naziv }} | {{ $item->tire->sifra }} | {{ $item->quantity }} | {{ number_format($item->unit_price, 2) }} KM | {{ number_format($item->total_price, 2) }} KM |
+| {{ $item->tire->ime }} | {{ $item->tire->sifra }} | {{ $item->quantity }} | {{ number_format($item->unit_price, 2) }} KM | {{ number_format($item->total_price, 2) }} KM |
 @endforeach
 @endcomponent
 
