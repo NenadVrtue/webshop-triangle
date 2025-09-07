@@ -1,34 +1,19 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
+import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from '@/components/ui/table';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
+import { toast } from 'sonner';
+import { DataTable } from '@/components/table/data-table';
+import { ColumnDef } from '@tanstack/react-table';
+import { formatCurrency } from '@/lib/utils';
 import {
     Users,
     ShoppingCart,
@@ -38,16 +23,14 @@ import {
     Phone,
     Building,
     MapPin,
-    Eye,
     Edit,
     Filter,
-    X,
-    Plus,
-    Trash2,
     UserPlus,
+    Trash2,
+    Eye,
+    X,
     UserMinus
 } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface User {
     id: number;
@@ -85,6 +68,20 @@ interface Order {
     created_at: string;
 }
 
+interface Tire {
+    id: number;
+    sifra: string;
+    ime: string;
+    veleprodajna_cijena?: number;
+    maloprodajna_cijena?: number;
+    nabavna_cijena?: number;
+    kolicina_na_stanju: number;
+    sezona?: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 interface Stats {
     total_users: number;
     active_users: number;
@@ -96,6 +93,7 @@ interface Stats {
 interface Props {
     users: User[];
     orders: Order[];
+    tires: Tire[];
     stats: Stats;
     filters?: {
         status?: string;
@@ -150,15 +148,94 @@ const formatDate = (dateString: string) => {
     });
 };
 
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('sr-RS', {
-        style: 'currency',
-        currency: 'BAM'
-    }).format(amount);
-};
+const createAdminTireColumns = (
+    updatingTire: number | null,
+    handleToggleActive: (tireId: number, currentStatus: boolean) => void
+): ColumnDef<Tire>[] => [
+        {
+            accessorKey: "sifra",
+            header: "Šifra",
+            cell: ({ row }) => (
+                <div className="font-medium">{row.getValue("sifra")}</div>
+            ),
+        },
+        {
+            accessorKey: "ime",
+            header: "Naziv",
+            cell: ({ row }) => (
+                <div className="max-w-[200px] truncate">{row.getValue("ime")}</div>
+            ),
+        },
+        {
+            accessorKey: "veleprodajna_cijena",
+            header: "VP Cijena",
+            cell: ({ row }) => (
+                <div>{formatCurrency(row.getValue("veleprodajna_cijena"))}</div>
+            ),
+        },
+        {
+            accessorKey: "maloprodajna_cijena",
+            header: "MP Cijena",
+            cell: ({ row }) => (
+                <div>{formatCurrency(row.getValue("maloprodajna_cijena"))}</div>
+            ),
+        },
+        {
+            accessorKey: "kolicina_na_stanju",
+            header: "Stanje",
+            cell: ({ row }) => {
+                const quantity = row.getValue("kolicina_na_stanju") as number;
+                return (
+                    <div className={quantity === 0 ? "text-red-600 font-medium" : ""}>
+                        {quantity}
+                        {quantity === 0 && (
+                            <Badge variant="destructive" className="ml-2 text-xs">
+                                Nema na stanju
+                            </Badge>
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: "sezona",
+            header: "Sezona",
+            cell: ({ row }) => (
+                <div>{row.getValue("sezona")}</div>
+            ),
+        },
+        {
+            accessorKey: "is_active",
+            header: "Status",
+            cell: ({ row }) => {
+                const tire = row.original;
+                const isActive = tire.is_active;
+                const quantity = tire.kolicina_na_stanju;
 
-export default function AdminDashboard({ users, orders, stats, filters = {} }: Props) {
+                return (
+                    <div className="flex items-center gap-2">
+                        <Switch
+                            checked={isActive}
+                            disabled={updatingTire === tire.id}
+                            onCheckedChange={() => handleToggleActive(tire.id, isActive)}
+                        />
+                        <Badge variant={isActive ? "default" : "secondary"}>
+                            {isActive ? "Aktivna" : "Neaktivna"}
+                        </Badge>
+                        {quantity === 0 && (
+                            <Badge variant="destructive" className="text-xs">
+                                Nema na stanju
+                            </Badge>
+                        )}
+                    </div>
+                );
+            },
+        },
+    ];
+
+export default function AdminDashboard({ users, orders, tires = [], stats, filters = {} }: Props) {
     const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+    const [updatingTire, setUpdatingTire] = useState<number | null>(null);
     const [showFilters, setShowFilters] = useState(false);
     const [localFilters, setLocalFilters] = useState({
         status: filters?.status || 'all',
@@ -201,6 +278,35 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
             console.error('Error updating status:', error);
         } finally {
             setUpdatingStatus(null);
+        }
+    };
+
+    const handleToggleActive = async (tireId: number, currentStatus: boolean) => {
+        setUpdatingTire(tireId);
+
+        try {
+            await router.patch(`/api/tires/${tireId}/toggle-active`, {}, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.success(
+                        currentStatus
+                            ? 'Guma je uspešno deaktivirana'
+                            : 'Guma je uspešno aktivirana'
+                    );
+                },
+                onError: (errors) => {
+                    console.error('Toggle active error:', errors);
+                    toast.error('Greška pri ažuriranju statusa gume');
+                },
+                onFinish: () => {
+                    setUpdatingTire(null);
+                }
+            });
+        } catch (error) {
+            console.error('Toggle active error:', error);
+            toast.error('Greška pri ažuriranju statusa gume');
+            setUpdatingTire(null);
         }
     };
 
@@ -390,8 +496,10 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
         { value: 'cancelled', label: 'Otkazano' },
     ];
 
+    const adminTireColumns = createAdminTireColumns(updatingTire, handleToggleActive);
+
     return (
-        <>
+        <AppLayout>
             <Head title="Admin Dashboard" />
 
             <div className="container mx-auto p-6 space-y-8">
@@ -576,6 +684,22 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
                                 </TableBody>
                             </Table>
                         </div>
+                    </CardContent>
+                </Card>
+
+                {/* Tire Management Section */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Upravljanje gumama</CardTitle>
+                        <CardDescription>
+                            Pregled i upravljanje statusom guma
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <DataTable
+                            columns={adminTireColumns}
+                            data={tires}
+                        />
                     </CardContent>
                 </Card>
 
@@ -976,6 +1100,6 @@ export default function AdminDashboard({ users, orders, stats, filters = {} }: P
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </>
+        </AppLayout>
     );
 }

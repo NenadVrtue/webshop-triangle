@@ -86,7 +86,6 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
             meta: {
                 className: "max-w-40 h-auto md:max-w-none wrap"
             },
-
             cell: ({ row }) => {
                 const naziv = row.getValue("ime") as string;
                 return (
@@ -94,7 +93,6 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
                 );
             },
         },
-
         {
             accessorKey: "kolicina_na_stanju",
             header: ({ column }) => (
@@ -131,12 +129,26 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
             ),
             cell: ({ row }) => {
                 const isActive = row.getValue("is_active") as boolean;
+                const kolicina = row.getValue("kolicina_na_stanju") as number;
+                const isOutOfStock = kolicina === 0;
+
                 return (
-                    <Badge variant={isActive ? "default" : "secondary"}>
-                        {isActive ? "Aktivan" : "Neaktivan"}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isActive && !isOutOfStock
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                            {isActive && !isOutOfStock ? 'Aktivna' : 'Neaktivna'}
+                        </span>
+                        {isOutOfStock && (
+                            <span className="text-xs text-orange-600 font-medium">
+                                (Nema na stanju)
+                            </span>
+                        )}
+                    </div>
                 );
             },
+            enableHiding: false,
         },
         {
             id: "actions",
@@ -148,8 +160,9 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
                     <Button
                         onClick={() => onAddToCart(tire)}
                         size="sm"
+                        variant="outline"
+                        className="h-8"
                         disabled={!tire.is_active}
-                        className="max-w-fit "
                     >
                         Dodaj u korpu
                     </Button>
