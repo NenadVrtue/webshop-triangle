@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Head, router } from '@inertiajs/react';
+import { type BreadcrumbItem } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ import {
     Filter,
     X
 } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
 
 interface Order {
     id: number;
@@ -167,7 +169,7 @@ export default function SalesDashboard({ orders, filters }: Props) {
     ];
 
     return (
-        <>
+        <AppLayout>
             <Head title="Prodaja Dashboard" />
 
             <div className="container mx-auto p-6 space-y-8">
@@ -396,6 +398,6 @@ export default function SalesDashboard({ orders, filters }: Props) {
                     </CardContent>
                 </Card>
             </div>
-        </>
+        </AppLayout>
     );
 }

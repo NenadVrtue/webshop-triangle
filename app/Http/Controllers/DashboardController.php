@@ -15,6 +15,10 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
+        if ($request->user() && method_exists($request->user(), 'isSales') && $request->user()->isSales()) {
+            return redirect()->route('sales.dashboard');
+        }
+
         // Get all tires with proper data mapping for DataTable
         $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'is_active', 'created_at', 'updated_at')
             ->orderBy('created_at', 'desc')
