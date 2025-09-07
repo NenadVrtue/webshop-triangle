@@ -260,6 +260,7 @@ const createAdminTireColumns = (
             cell: ({ row }) => {
                 const tire = row.original;
                 const isActive = tire.is_active;
+
                 const quantity = tire.kolicina_na_stanju;
 
                 return (
@@ -424,7 +425,9 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
         setUpdatingTire(tireId);
 
         try {
-            await router.patch(`/api/tires/${tireId}/toggle-active`, {}, {
+            await router.patch(`/admin/tires/${tireId}`, {
+                is_active: !currentStatus
+            }, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {

@@ -51,10 +51,13 @@ class TireController extends Controller
         $validated = $request->validate([
             'sifra' => 'sometimes|string|max:255',
             'naziv' => 'sometimes|string|max:255',
+            'is_active' => 'sometimes|boolean',
         ]);
 
         $tire->update($validated);
-        return response()->json($tire);
+        
+        // Return redirect back for Inertia.js compatibility
+        return redirect()->back();
     }
 
     public function destroy(Tire $tire)

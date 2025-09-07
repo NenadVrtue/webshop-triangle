@@ -88,7 +88,7 @@ class DashboardController extends Controller
             });
 
         // Get all tires
-        $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'created_at', 'updated_at')
+        $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'is_active', 'created_at', 'updated_at')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($tire) {
@@ -105,7 +105,7 @@ class DashboardController extends Controller
                     'nabavna_cijena' => 0, // Not in model fillable yet
                     'kolicina_na_stanju' => $tire->kolicina_na_stanju ?? 0,
                     'sezona' => $tire->sezona ?? 'N/A',
-                    'is_active' => true, // Default until column added
+                    'is_active' => $tire->is_active ?? true,
                     'created_at' => $tire->created_at,
                     'updated_at' => $tire->updated_at,
                 ];

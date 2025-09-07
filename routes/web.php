@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\PromoCodeController;
+use App\Http\Controllers\Api\TireController;
 use App\Models\Discount;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -54,6 +55,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::delete('/promocodes/{promoCode}', [PromoCodeController::class, 'destroy'])->name('promocodes.destroy');
     Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.index');
     Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');
+    
+    // Tire management routes
+    Route::patch('/admin/tires/{tire}', [TireController::class, 'update'])->name('admin.tires.update');
 });
 
 // Sales routes (protected by sales role)

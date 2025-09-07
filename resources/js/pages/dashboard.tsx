@@ -122,6 +122,7 @@ const createUserTireColumns = (
             cell: ({ row }) => {
                 const tire = row.original;
                 const isActive = tire.is_active;
+                console.log('guma je aktivna: ', isActive);
                 const quantity = tire.kolicina_na_stanju;
 
                 return (
