@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Order;
+use App\Models\Tire;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -85,9 +86,30 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Get all tires
+        $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'created_at', 'updated_at')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($tire) {
+                return [
+                    'id' => $tire->id,
+                    'sifra' => $tire->sifra,
+                    'ime' => $tire->ime,
+                    'veleprodajna_cijena' => $tire->vp_cijena ?? 0,
+                    'maloprodajna_cijena' => $tire->mp_cijena ?? 0,
+                    'nabavna_cijena' => 0, // Not in model fillable yet
+                    'kolicina_na_stanju' => $tire->kolicina_na_stanju ?? 0,
+                    'sezona' => $tire->sezona ?? 'N/A',
+                    'is_active' => true, // Default until column added
+                    'created_at' => $tire->created_at,
+                    'updated_at' => $tire->updated_at,
+                ];
+            });
+
         return Inertia::render('Admin/Dashboard', [
             'users' => $users,
             'orders' => $orders,
+            'tires' => $tires,
             'stats' => [
                 'total_users' => $users->count(),
                 'active_users' => $users->where('is_active', true)->count(),

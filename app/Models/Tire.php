@@ -18,5 +18,6 @@ class Tire extends Model
         'kategorija',
         'sezona',
         'eprel_code',
+
     ];
 }

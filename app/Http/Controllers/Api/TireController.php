@@ -18,7 +18,13 @@ class TireController extends Controller
             $query->where('sifra', 'like', '%' . $request->input('sifra') . '%');
         }
 
-        $perPage = $request->input('per_page', 10); // ili default 10 po stranici
+        // Support fetching all tires for frontend pagination
+        $perPage = $request->input('per_page', 1000); // Default to 1000 for frontend pagination
+        
+        // Allow up to 10000 items for large inventories
+        if ($perPage > 10000) {
+            $perPage = 10000;
+        }
 
         return TireResource::collection($query->paginate($perPage));
     }

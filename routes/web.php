@@ -55,18 +55,17 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');
 });
 
-// Sales routes (unprotected by role)
-// Route::prefix('sales')
-//     ->as('sales.')
-//     ->group(function () {
-//         Route::get('/', [SalesDashboardController::class, 'index'])->name('dashboard');
-//         Route::patch('/orders/{order}/status', [SalesDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
-//     });
+// Sales routes (protected by sales role)
+Route::middleware(['auth', 'verified', 'role:sales'])
+    ->prefix('sales')
+    ->as('sales.')
+    ->group(function () {
+        Route::get('/', [SalesDashboardController::class, 'index'])->name('dashboard');
+        Route::patch('/orders/{order}/status', [SalesDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
+    });
 
 Route::middleware(['auth', 'verified', 'role:sales'])->group(function () {
-    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
-    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
 });
 
 require __DIR__.'/settings.php';

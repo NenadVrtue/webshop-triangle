@@ -25,7 +25,7 @@ Route::middleware(['auth:sanctum', 'role:admin'])->group(function () {
         ->names('api.users');
     Route::apiResource('discounts', DiscountController::class)->names('api.discounts');
     Route::apiResource('promo-codes', PromoCodeController::class)->names('api.discounts');
-    Route::apiResource('tires', TireController::class)->names('api.tires');
+    // Remove duplicate tires route - using public route above
 });
 
 // ORDERS za sve autentifikovane korisnike
