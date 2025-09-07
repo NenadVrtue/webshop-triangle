@@ -46,22 +46,19 @@ export interface User {
 export interface Tire {
     id: number;
     sifra: string;
-    naziv: string;
-    tip: string;
-    is_active: boolean;
-    quantity: number;
-    dimenzije: string;
-    sirina: string;
-    visina: string;
+    ime: string;
+    dimenzije?: string;
+    sirina?: string;
+    visina?: string;
+    eprel_code?: string;
     veleprodajna_cijena?: number;
     maloprodajna_cijena?: number;
     nabavna_cijena?: number;
-    brend?: string;
-    dobavljac?: string;
-    naziv_dobavljaca?: string;
-    bar_kod?: string;
-    kataloski_brojevi?: string;
-    precnik?: string;
+    kolicina_na_stanju: number;
+    sezona?: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface CartItem {

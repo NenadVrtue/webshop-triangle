@@ -28,6 +28,7 @@ interface Tire {
     sirina?: string;
     visina?: string;
     precnik?: string;
+    eprel_code?: string;
     is_active: boolean;
     // Only show customer-facing prices
     maloprodajna_cijena?: number;
@@ -94,6 +95,26 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
             },
         },
         {
+            accessorKey: "dimenzije",
+            header: "Dimenzije",
+            enableHiding: false,
+        },
+        {
+            accessorKey: "sirina",
+            header: "Širina",
+            enableHiding: false,
+        },
+        {
+            accessorKey: "visina",
+            header: "Visina",
+            enableHiding: false,
+        },
+        {
+            accessorKey: "eprel_code",
+            header: "Eprel Code",
+            enableHiding: false,
+        },
+        {
             accessorKey: "kolicina_na_stanju",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Količina na stanju" />
@@ -135,8 +156,8 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
                 return (
                     <div className="flex items-center gap-2">
                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${isActive && !isOutOfStock
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                             }`}>
                             {isActive && !isOutOfStock ? 'Aktivna' : 'Neaktivna'}
                         </span>

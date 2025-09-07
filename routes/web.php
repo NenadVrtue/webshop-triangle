@@ -49,8 +49,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
     Route::patch('/users/{user}/soft-delete', [UserController::class, 'softDelete'])->name('users.soft-delete');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
-    Route::get('/promocodes', [PromoCodeController::class, 'index'])->name('promocodes.index');
     Route::post('/promocodes', [PromoCodeController::class, 'store'])->name('promocodes.store');
+    Route::patch('/promocodes/{promoCode}', [PromoCodeController::class, 'update'])->name('promocodes.update');
+    Route::delete('/promocodes/{promoCode}', [PromoCodeController::class, 'destroy'])->name('promocodes.destroy');
     Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.index');
     Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');
 });
