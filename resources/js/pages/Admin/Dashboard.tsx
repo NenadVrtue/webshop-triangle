@@ -73,6 +73,10 @@ interface Tire {
     id: number;
     sifra: string;
     ime: string;
+    dimenzije?: string;
+    sirina?: string;
+    visina?: string;
+    eprel_code?: string;
     veleprodajna_cijena?: number;
     maloprodajna_cijena?: number;
     nabavna_cijena?: number;
@@ -182,6 +186,34 @@ const createAdminTireColumns = (
             header: "Naziv",
             cell: ({ row }) => (
                 <div className="max-w-[200px] truncate">{row.getValue("ime")}</div>
+            ),
+        },
+        {
+            accessorKey: "dimenzije",
+            header: "Dimenzije",
+            cell: ({ row }) => (
+                <div>{row.getValue("dimenzije")}</div>
+            ),
+        },
+        {
+            accessorKey: "sirina",
+            header: "Širina",
+            cell: ({ row }) => (
+                <div>{row.getValue("sirina")}</div>
+            ),
+        },
+        {
+            accessorKey: "visina",
+            header: "Visina",
+            cell: ({ row }) => (
+                <div>{row.getValue("visina")}</div>
+            ),
+        },
+        {
+            accessorKey: "eprel_code",
+            header: "Eprel kod",
+            cell: ({ row }) => (
+                <a target='_blank' href={row.getValue("eprel_code")}>{row.getValue("eprel_code")}</a>
             ),
         },
         {

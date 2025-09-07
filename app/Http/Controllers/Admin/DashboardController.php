@@ -96,6 +96,10 @@ class DashboardController extends Controller
                     'id' => $tire->id,
                     'sifra' => $tire->sifra,
                     'ime' => $tire->ime,
+                    'dimenzije' => $tire->dimenzije,
+                    'sirina' => $tire->sirina,
+                    'visina' => $tire->visina,
+                    'eprel_code' => $tire->eprel_code,
                     'veleprodajna_cijena' => $tire->vp_cijena ?? 0,
                     'maloprodajna_cijena' => $tire->mp_cijena ?? 0,
                     'nabavna_cijena' => 0, // Not in model fillable yet
