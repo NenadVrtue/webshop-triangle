@@ -34,5 +34,10 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'woo' => [
+        'url' => env('WC_URL'),
+        'key' => env('WC_CONSUMER_KEY'),
+        'secret' => env('WC_CONSUMER_SECRET'),
+    ],
 
 ];
