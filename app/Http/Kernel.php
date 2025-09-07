@@ -51,4 +51,10 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'role' => \App\Http\Middleware\EnsureUserHasRole::class,
     ];
+    protected function schedule(\Illuminate\Console\Scheduling\Schedule $schedule)
+    {
+        // svaki dan u 05:00
+        $schedule->job(new \App\Jobs\SyncTiresToWoo)->dailyAt('05:00');
+    }
+
 }
