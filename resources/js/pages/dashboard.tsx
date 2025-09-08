@@ -116,16 +116,7 @@ const createUserTireColumns = (
             },
 
         },
-        {
-            accessorKey: "dimenzije",
-            header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Dimenzije" />
-            ),
-            cell: ({ row }) => (
-                <div>{row.getValue("dimenzije")}</div>
-            ),
 
-        },
         {
             accessorKey: "sirina",
             header: ({ column }) => (
@@ -143,6 +134,16 @@ const createUserTireColumns = (
             ),
             cell: ({ row }) => (
                 <div>{row.getValue("visina")}</div>
+            ),
+
+        },
+        {
+            accessorKey: "dimenzije",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Dimenzije" />
+            ),
+            cell: ({ row }) => (
+                <div>{row.getValue("dimenzije")}</div>
             ),
 
         },
