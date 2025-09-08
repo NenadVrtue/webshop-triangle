@@ -14,16 +14,12 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    base: '/build/',
     server: {
         host: '0.0.0.0',
         port: 5173,
-        cors: {
-            origin: ['http://192.168.100.41:8000', 'http://localhost:8000'],
-            credentials: true
-        },
         hmr: {
-            host: '192.168.100.41',
-            port: 5173
+            host: 'localhost'
         }
     },
     esbuild: {

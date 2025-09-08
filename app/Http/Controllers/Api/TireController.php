@@ -20,7 +20,7 @@ class TireController extends Controller
 
         // Support fetching all tires for frontend pagination
         $perPage = $request->input('per_page', 1000); // Default to 1000 for frontend pagination
-        
+
         // Allow up to 10000 items for large inventories
         if ($perPage > 10000) {
             $perPage = 10000;
@@ -55,9 +55,13 @@ class TireController extends Controller
         ]);
 
         $tire->update($validated);
-        
+
         // Return redirect back for Inertia.js compatibility
         return redirect()->back();
+    }
+    public function softDelete(Request $request, Tire $tire){
+        $tire->update(['is_active' => false]);
+        return response()->json(null, 204);
     }
 
     public function destroy(Tire $tire)
