@@ -40,11 +40,11 @@ class OrderResource extends JsonResource
                     'tire' => [
                         'id' => $item->tire->id,
                         'sifra' => $item->tire->sifra,
-                        'naziv' => $item->tire->naziv,
+                        'ime' => $item->tire->ime,
                         'tip' => $item->tire->tip,
                         'dimenzije' => $item->tire->dimenzije,
                         'brend' => $item->tire->brend,
-                        'veleprodajna_cijena' => $item->tire->veleprodajna_cijena,
+                        'vp_cijena' => $item->tire->veleprodajna_cijena,
                     ],
                     'quantity' => $item->quantity,
                     'unit_price' => $item->unit_price,

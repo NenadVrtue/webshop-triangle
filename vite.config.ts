@@ -17,8 +17,13 @@ export default defineConfig({
     server: {
         host: '0.0.0.0',
         port: 5173,
+        cors: {
+            origin: ['http://192.168.100.41:8000', 'http://localhost:8000'],
+            credentials: true
+        },
         hmr: {
-            host: 'localhost'
+            host: '192.168.100.41',
+            port: 5173
         }
     },
     esbuild: {

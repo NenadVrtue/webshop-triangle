@@ -23,7 +23,7 @@ const mainNavItems: NavItem[] = [
 const footerNavItems: NavItem[] = [
     {
         title: 'Kontaktiraj Pomoć',
-        href: 'https://github.com/laravel/react-starter-kit',
+        href: '/contact',
         icon: MessageCircleQuestion,
     },
 

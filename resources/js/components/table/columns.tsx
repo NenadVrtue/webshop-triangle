@@ -47,7 +47,7 @@ interface Tire {
 }
 
 // Expandable cell component for naziv
-function ExpandableNazivCell({ naziv }: { naziv: string }) {
+export function ExpandableNazivCell({ naziv }: { naziv: string }) {
     const [isExpanded, setIsExpanded] = useState(false);
 
     // Add null/undefined check
@@ -59,7 +59,7 @@ function ExpandableNazivCell({ naziv }: { naziv: string }) {
         <div
             className={`cursor-pointer transition-all duration-200 ${isExpanded
                 ? "max-w-none whitespace-normal break-words"
-                : "max-w-40 h-auto md:max-w-none truncate"
+                : "max-w-34 h-auto md:max-w-none truncate"
                 }`}
             title={naziv}
             onClick={() => setIsExpanded(!isExpanded)}
@@ -85,7 +85,7 @@ export function createColumns(onAddToCart: (tire: Tire) => void): ColumnDef<Tire
             header: "Naziv",
             enableHiding: false,
             meta: {
-                className: "max-w-40 h-auto md:max-w-none wrap"
+                className: "max-w-34 h-auto md:max-w-none wrap"
             },
             cell: ({ row }) => {
                 const naziv = row.getValue("ime") as string;

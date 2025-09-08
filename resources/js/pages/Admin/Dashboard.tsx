@@ -139,10 +139,8 @@ interface PromoCodeFormData {
 const getStatusBadgeVariant = (status: string) => {
     switch (status) {
         case 'pending': return 'secondary';
-        case 'confirmed': return 'default';
         case 'processing': return 'outline';
-        case 'shipped': return 'default';
-        case 'delivered': return 'default';
+        case 'done': return 'default';
         case 'cancelled': return 'destructive';
         default: return 'secondary';
     }
@@ -151,11 +149,9 @@ const getStatusBadgeVariant = (status: string) => {
 const getStatusLabel = (status: string) => {
     switch (status) {
         case 'pending': return 'Na čekanju';
-        case 'confirmed': return 'Potvrđeno';
-        case 'processing': return 'U obradi';
-        case 'shipped': return 'Poslano';
-        case 'delivered': return 'Dostavljeno';
-        case 'cancelled': return 'Otkazano';
+        case 'processing': return 'U procesu';
+        case 'done': return 'Završena';
+        case 'cancelled': return 'Otkazana';
         default: return status;
     }
 };
@@ -260,6 +256,7 @@ const createAdminTireColumns = (
             cell: ({ row }) => {
                 const tire = row.original;
                 const isActive = tire.is_active;
+
                 const quantity = tire.kolicina_na_stanju;
 
                 return (
@@ -424,7 +421,9 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
         setUpdatingTire(tireId);
 
         try {
-            await router.patch(`/api/tires/${tireId}/toggle-active`, {}, {
+            await router.patch(`/admin/tires/${tireId}`, {
+                is_active: !currentStatus
+            }, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {
@@ -719,11 +718,9 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
     const statusOptions = [
         { value: 'all', label: 'Svi statusi' },
         { value: 'pending', label: 'Na čekanju' },
-        { value: 'confirmed', label: 'Potvrđeno' },
-        { value: 'processing', label: 'U obradi' },
-        { value: 'shipped', label: 'Poslano' },
-        { value: 'delivered', label: 'Dostavljeno' },
-        { value: 'cancelled', label: 'Otkazano' },
+        { value: 'processing', label: 'U procesu' },
+        { value: 'done', label: 'Završena' },
+        { value: 'cancelled', label: 'Otkazana' },
     ];
 
     const adminTireColumns = createAdminTireColumns(updatingTire, handleToggleActive);

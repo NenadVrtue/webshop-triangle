@@ -349,7 +349,7 @@ export default function Checkout() {
                                                         </Button>
 
                                                         <div className="flex-1">
-                                                            <h4 className="font-medium">{item.tire.naziv}</h4>
+                                                            <h4 className="font-medium">{item.tire.ime}</h4>
                                                             <p className="text-sm text-gray-600 dark:text-foreground">
                                                                 Šifra: <span className="font-medium dark:text-secondary"> {item.tire.sifra}</span>
                                                             </p>

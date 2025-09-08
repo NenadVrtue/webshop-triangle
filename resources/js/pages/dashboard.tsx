@@ -5,11 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/table/data-table';
+import { DataTableColumnHeader } from '@/components/table/column-header';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatCurrency } from '@/lib/utils';
 import { useCartContext } from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
 import { ShoppingCart } from 'lucide-react';
+import { ExpandableNazivCell } from '@/components/table/columns';
 
 interface Tire {
     id: number;
@@ -53,13 +55,20 @@ const createUserTireColumns = (
         {
             accessorKey: "ime",
             header: "Naziv",
+            enableHiding: false,
+            meta: {
+                className: "max-w-34 h-auto md:max-w-none wrap"
+            },
             cell: ({ row }) => (
-                <div className="max-w-[200px] truncate">{row.getValue("ime")}</div>
+
+                <ExpandableNazivCell naziv={row.getValue("ime") as string} />
             ),
         },
         {
             accessorKey: "kolicina_na_stanju",
-            header: "Stanje",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Količina na stanju" />
+            ),
             cell: ({ row }) => {
                 const quantity = row.getValue("kolicina_na_stanju") as number;
                 return (
@@ -73,34 +82,69 @@ const createUserTireColumns = (
                     </div>
                 );
             },
+
         },
         {
             accessorKey: "veleprodajna_cijena",
-            header: "VP Cijena",
-            cell: ({ row }) => (
-                <div>{formatCurrency(row.getValue("veleprodajna_cijena"))}</div>
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="VP Cijena" />
             ),
+            cell: ({ row }) => {
+                const price = row.getValue("veleprodajna_cijena") as number;
+                if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
+                return (
+                    <div className="font-medium">
+                        {price} KM
+                    </div>
+                );
+            },
+            enableHiding: false,
+        },
+        {
+            accessorKey: "maloprodajna_cijena",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="MP Cijena" />
+            ),
+            cell: ({ row }) => {
+                const price = row.getValue("maloprodajna_cijena") as number;
+                if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
+                return (
+                    <div className="font-medium">
+                        {price} KM
+                    </div>
+                );
+            },
+
         },
         {
             accessorKey: "dimenzije",
-            header: "Dimenzije",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Dimenzije" />
+            ),
             cell: ({ row }) => (
                 <div>{row.getValue("dimenzije")}</div>
             ),
+
         },
         {
             accessorKey: "sirina",
-            header: "Širina",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Širina" />
+            ),
             cell: ({ row }) => (
                 <div>{row.getValue("sirina")}</div>
             ),
+
         },
         {
             accessorKey: "visina",
-            header: "Visina",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Visina" />
+            ),
             cell: ({ row }) => (
                 <div>{row.getValue("visina")}</div>
             ),
+
         },
         {
             accessorKey: "eprel_code",
@@ -108,6 +152,7 @@ const createUserTireColumns = (
             cell: ({ row }) => (
                 <a target='_blank' href={row.getValue("eprel_code")}>{row.getValue("eprel_code")}</a>
             ),
+            enableHiding: false,
         },
         {
             accessorKey: "sezona",
@@ -122,11 +167,12 @@ const createUserTireColumns = (
             cell: ({ row }) => {
                 const tire = row.original;
                 const isActive = tire.is_active;
+                console.log('guma je aktivna: ', isActive);
                 const quantity = tire.kolicina_na_stanju;
 
                 return (
                     <div className="flex items-center gap-2">
-                        <Badge variant={isActive ? "default" : "secondary"}>
+                        <Badge variant={isActive ? "delivered" : "cancelled"}>
                             {isActive ? "Aktivna" : "Neaktivna"}
                         </Badge>
                         {quantity === 0 && (
@@ -143,18 +189,19 @@ const createUserTireColumns = (
             header: "Akcije",
             cell: ({ row }) => {
                 const tire = row.original;
+                const isActive = tire.is_active;
                 const canAddToCart = tire.is_active && tire.kolicina_na_stanju > 0;
 
                 return (
                     <Button
                         onClick={() => onAddToCart(tire)}
                         size="sm"
-                        variant="outline"
+                        variant={isActive ? "default" : "secondary"}
                         className="h-8 flex items-center gap-2"
                         disabled={!canAddToCart}
                     >
                         <ShoppingCart className="h-4 w-4" />
-                        Dodaj u korpu
+                        {canAddToCart ? "Dodaj u korpu" : "Nije dostupno"}
                     </Button>
                 );
             },

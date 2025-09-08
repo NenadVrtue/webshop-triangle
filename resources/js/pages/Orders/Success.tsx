@@ -11,11 +11,11 @@ interface OrderItem {
     tire: {
         id: number;
         sifra: string;
-        naziv: string;
+        ime: string;
         tip: string;
         dimenzije: string;
         brend?: string;
-        veleprodajna_cijena?: number;
+        vp_cijena?: number;
     };
     quantity: number;
     unit_price: number;
@@ -94,7 +94,7 @@ export default function Success({ order }: SuccessProps) {
                                             {orderItems.map((item) => (
                                                 <div key={item.id} className="flex justify-between items-start p-3 border rounded-lg">
                                                     <div className="flex-1">
-                                                        <h4 className="font-medium">{item.tire?.naziv || 'N/A'}</h4>
+                                                        <h4 className="font-medium">{item.tire?.ime || 'N/A'}</h4>
                                                         <p className="text-sm text-muted-foreground">
                                                             {item.tire?.sifra || 'N/A'} • {item.tire?.dimenzije || 'N/A'}
                                                         </p>

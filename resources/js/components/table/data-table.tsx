@@ -101,6 +101,7 @@ export function DataTable<TData, TValue>({
                 const t = [
                     item.sifra,
                     item.naziv,
+                    item.ime,
                     item.tip,
                     item.dimenzije,
                     item.sirina?.toString(),
@@ -111,6 +112,8 @@ export function DataTable<TData, TValue>({
                     item.precnik?.toString(),
                     item.bar_kod,
                     item.kataloski_brojevi,
+                    item.sezona,
+                    item.eprel_code,
                 ]
                     .filter(Boolean)
                     .join(' ')
@@ -126,6 +129,7 @@ export function DataTable<TData, TValue>({
                 const searchableFields = [
                     item.sifra,
                     item.naziv,
+                    item.ime,
                     item.tip,
                     item.dimenzije,
                     item.sirina?.toString(),
@@ -136,6 +140,8 @@ export function DataTable<TData, TValue>({
                     item.precnik?.toString(),
                     item.bar_kod,
                     item.kataloski_brojevi,
+                    item.sezona,
+                    item.eprel_code,
                 ]
                     .filter(Boolean)
                     .join(' ');
@@ -713,7 +719,7 @@ export function DataTable<TData, TValue>({
                                     {row.getRightVisibleCells().map((cell) => (
                                         <TableCell
                                             key={cell.id}
-                                            className="sticky  right-0 lg:flex lg:justify-center items-center bg-background/95 lg:bg-none backdrop-blur lg:backdrop-blur-none supports-[backdrop-filter]:bg-background/60 lg:supports-[backdrop-filter]:background-transparent border-l lg:border-l-0 z-10"
+                                            className="sticky  right-0 lg:flex lg:justify-center items-center bg-background/95 lg:bg-none backdrop-blur-xl lg:backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 lg:supports-[backdrop-filter]:background-transparent border-l lg:border-l-0 z-10"
                                         >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
