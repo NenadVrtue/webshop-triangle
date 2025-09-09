@@ -16,6 +16,7 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+
 /auth.json
 /.fleet
 /.idea
@@ -23,3 +24,4 @@ yarn-error.log
 /.vscode
 /.zed
 /AIChatRazgovor.txt
+vite.config.ts
