@@ -67,10 +67,6 @@ Primili ste novi upit o gumi od kupca **{{ $inquiryData['customer_name'] }}**.
 
 Za odgovor na upit, jednostavno odgovorite na ovaj email ili kontaktirajte kupca direktno.
 
-@component('mail::button', ['url' => config('app.url')])
-Otvori dashboard
-@endcomponent
-
 Hvala,<br>
-{{ config('app.name') }}
+Pring 
 @endcomponent
