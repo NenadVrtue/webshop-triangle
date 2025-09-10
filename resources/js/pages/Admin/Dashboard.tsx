@@ -31,7 +31,9 @@ import {
     Eye,
     X,
     Plus,
-    UserMinus
+    UserMinus,
+    Percent,
+    Tag
 } from 'lucide-react';
 
 interface User {
@@ -998,7 +1000,7 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
                 </Card>
 
                 {/* Promo Code Management Section */}
-                <Card>
+                {/* <Card>
                     <CardHeader>
                         <div className="flex items-center justify-between">
                             <div>
@@ -1056,7 +1058,7 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
                             </Table>
                         </div>
                     </CardContent>
-                </Card>
+                </Card> */}
 
                 {/* Orders Table */}
                 <Card>
