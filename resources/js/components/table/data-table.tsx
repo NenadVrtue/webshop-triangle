@@ -66,7 +66,7 @@ export function DataTable<TData, TValue>({
     const [globalFilter, setGlobalFilter] = useState<string>("")
     const [fuzzySearchValue, setFuzzySearchValue] = useState<string>("")
     const [columnPinning, setColumnPinning] = useState<ColumnPinningState>({
-        right: ['actions']
+        right: ['actions', 'is_active']
     })
 
 
@@ -89,6 +89,85 @@ export function DataTable<TData, TValue>({
     const [selectedStatus, setSelectedStatus] = useState<string>("")
     const [selectedWidth, setSelectedWidth] = useState<string>("")
     const [selectedHeight, setSelectedHeight] = useState<string>("")
+    const [selectedDimenzije, setSelectedDimenzije] = useState<string>("")
+    const [selectedKategorija, setSelectedKategorija] = useState<string>("")
+
+    // Force default client-side pagination so filtering + fuzzy search paginate correctly
+    const isServerSide = false;
+
+    // Simple bidirectional filtering: calculate available options for each filter
+    const getFilteredDataExcluding = (excludeFilter: string) => {
+        return (data as any[]).filter((item: any) => {
+            if (excludeFilter !== 'width' && selectedWidth && (item.sirina ?? '').toString() !== selectedWidth) return false;
+            if (excludeFilter !== 'height' && selectedHeight && (item.visina ?? '').toString() !== selectedHeight) return false;
+            if (excludeFilter !== 'dimenzije' && selectedDimenzije && (item.dimenzije ?? '').toString() !== selectedDimenzije) return false;
+            if (excludeFilter !== 'kategorija' && selectedKategorija && (item.kategorija ?? '').toString() !== selectedKategorija) return false;
+            return true;
+        });
+    };
+
+    // Get all unique options for each filter
+    const allWidths = React.useMemo(() => {
+        return [...new Set((data as any[]).map((item: any) => item.sirina).filter(Boolean))].sort();
+    }, [data]);
+
+    const allHeights = React.useMemo(() => {
+        return [...new Set((data as any[]).map((item: any) => item.visina).filter(Boolean))].sort();
+    }, [data]);
+
+    const allDimenzijes = React.useMemo(() => {
+        return [...new Set((data as any[]).map((item: any) => item.dimenzije).filter(Boolean))].sort();
+    }, [data]);
+
+    const allKategorijas = React.useMemo(() => {
+        return [...new Set((data as any[]).map((item: any) => item.kategorija).filter(Boolean))].sort();
+    }, [data]);
+
+    // Available options for each filter (for determining what to disable)
+    const availableWidths = React.useMemo(() => {
+        const filtered = getFilteredDataExcluding('width');
+        return new Set(filtered.map((item: any) => item.sirina).filter(Boolean));
+    }, [data, selectedHeight, selectedDimenzije, selectedKategorija]);
+
+    const availableHeights = React.useMemo(() => {
+        const filtered = getFilteredDataExcluding('height');
+        return new Set(filtered.map((item: any) => item.visina).filter(Boolean));
+    }, [data, selectedWidth, selectedDimenzije, selectedKategorija]);
+
+    const availableDimenzijes = React.useMemo(() => {
+        const filtered = getFilteredDataExcluding('dimenzije');
+        return new Set(filtered.map((item: any) => item.dimenzije).filter(Boolean));
+    }, [data, selectedWidth, selectedHeight, selectedKategorija]);
+
+    const availableKategorijas = React.useMemo(() => {
+        const filtered = getFilteredDataExcluding('kategorija');
+        return new Set(filtered.map((item: any) => item.kategorija).filter(Boolean));
+    }, [data, selectedWidth, selectedHeight, selectedDimenzije]);
+
+    // Reset filters when they become unavailable
+    React.useEffect(() => {
+        if (selectedWidth && !availableWidths.has(selectedWidth)) {
+            setSelectedWidth("");
+        }
+    }, [selectedWidth, availableWidths]);
+
+    React.useEffect(() => {
+        if (selectedHeight && !availableHeights.has(selectedHeight)) {
+            setSelectedHeight("");
+        }
+    }, [selectedHeight, availableHeights]);
+
+    React.useEffect(() => {
+        if (selectedDimenzije && !availableDimenzijes.has(selectedDimenzije)) {
+            setSelectedDimenzije("");
+        }
+    }, [selectedDimenzije, availableDimenzijes]);
+
+    React.useEffect(() => {
+        if (selectedKategorija && !availableKategorijas.has(selectedKategorija)) {
+            setSelectedKategorija("");
+        }
+    }, [selectedKategorija, availableKategorijas]);
 
     // Compute filteredData from inputs (strict, fuzzy, advanced)
     const filteredData = React.useMemo(() => {
@@ -159,6 +238,8 @@ export function DataTable<TData, TValue>({
             }
             if (selectedWidth) out = out.filter((x: any) => (x.sirina ?? '').toString() === selectedWidth);
             if (selectedHeight) out = out.filter((x: any) => (x.visina ?? '').toString() === selectedHeight);
+            if (selectedDimenzije) out = out.filter((x: any) => (x.dimenzije ?? '').toString() === selectedDimenzije);
+            if (selectedKategorija) out = out.filter((x: any) => (x.kategorija ?? '').toString() === selectedKategorija);
         }
 
         return out as TData[];
@@ -172,69 +253,9 @@ export function DataTable<TData, TValue>({
         selectedStatus,
         selectedWidth,
         selectedHeight,
+        selectedDimenzije,
+        selectedKategorija,
     ]);
-
-    // Force default client-side pagination so filtering + fuzzy search paginate correctly
-    const isServerSide = false;
-
-    // Extract unique values for filter dropdowns
-    const uniqueBrands = React.useMemo(() => {
-        const brands = data.map((item: any) => item.brend).filter(Boolean);
-        return [...new Set(brands)].sort();
-    }, [data]);
-
-    const uniqueTypes = React.useMemo(() => {
-        const types = data.map((item: any) => item.tip).filter(Boolean);
-        return [...new Set(types)].sort();
-    }, [data]);
-
-    const uniqueWidths = React.useMemo(() => {
-        const widths = data.map((item: any) => item.sirina).filter(Boolean);
-        return [...new Set(widths)].sort();
-    }, [data]);
-
-    const uniqueHeights = React.useMemo(() => {
-        const heights = data.map((item: any) => item.visina).filter(Boolean);
-        return [...new Set(heights)].sort();
-    }, [data]);
-
-    // Get available heights for each width
-    const widthHeightsMap = React.useMemo(() => {
-        const map = new Map<string, Set<string>>();
-
-        (data as any[]).forEach(item => {
-            if (item.sirina && item.visina) {
-                const width = item.sirina.toString();
-                const height = item.visina.toString();
-
-                if (!map.has(width)) {
-                    map.set(width, new Set());
-                }
-                map.get(width)?.add(height);
-            }
-        });
-
-        return map;
-    }, [data]);
-
-    // Get available heights based on selected width
-    const availableHeights = React.useMemo(() => {
-        if (!selectedWidth) return [];
-        const heights = widthHeightsMap.get(selectedWidth) || new Set();
-        return Array.from(heights).sort((a, b) => parseFloat(a) - parseFloat(b));
-    }, [selectedWidth, widthHeightsMap]);
-
-    // Reset height if current selection is not available with selected width
-    React.useEffect(() => {
-        if (selectedWidth && selectedHeight && !availableHeights.includes(selectedHeight)) {
-            setSelectedHeight("");
-        }
-    }, [selectedWidth, selectedHeight, availableHeights]);
-
-    // Get count of available heights for each width
-    const getAvailableHeightsCount = (width: string) => {
-        return widthHeightsMap.get(width)?.size || 0;
-    };
 
     const table = useReactTable({
         data: filteredData,
@@ -269,20 +290,22 @@ export function DataTable<TData, TValue>({
         setSelectedStatus("");
         setSelectedWidth("");
         setSelectedHeight("");
+        setSelectedDimenzije("");
+        setSelectedKategorija("");
     };
 
     // Count active filters
     const activeFiltersCount = [
         globalFilter,
         fuzzySearchValue,
-        ...(showAdvancedFilters ? [selectedBrand, selectedType, selectedStatus, selectedWidth, selectedHeight] : [])
+        ...(showAdvancedFilters ? [selectedBrand, selectedType, selectedStatus, selectedWidth, selectedHeight, selectedDimenzije, selectedKategorija] : [])
     ].filter(Boolean).length;
 
     // Reset to first page whenever any filter changes to avoid empty pages
     React.useEffect(() => {
         table.setPageIndex(0);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [globalFilter, fuzzySearchValue, showAdvancedFilters, selectedBrand, selectedType, selectedStatus, selectedWidth, selectedHeight]);
+    }, [globalFilter, fuzzySearchValue, showAdvancedFilters, selectedBrand, selectedType, selectedStatus, selectedWidth, selectedHeight, selectedDimenzije, selectedKategorija]);
 
     return (
         <div className="space-y-4">
@@ -383,104 +406,115 @@ export function DataTable<TData, TValue>({
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-3">
-                            {/* Brand Filter 
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium text-muted-foreground">Brend</label>
-                                <select
-                                    value={selectedBrand}
-                                    onChange={(e) => setSelectedBrand(e.target.value)}
-                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
-                                >
-                                    <option value="">Svi brendovi</option>
-                                    {uniqueBrands.map(brand => (
-                                        <option key={brand} value={brand}>{brand}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            */}
-
-                            {/* Type Filter 
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium text-muted-foreground">Tip</label>
-                                <select
-                                    value={selectedType}
-                                    onChange={(e) => setSelectedType(e.target.value)}
-                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
-                                >
-                                    <option value="">Svi tipovi</option>
-                                    {uniqueTypes.map(type => (
-                                        <option key={type} value={type}>{type}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            */}
-
-                            {/* Status Filter 
-                            <div className="space-y-1">
-                                <label className="text-xs font-medium text-muted-foreground">Status</label>
-                                <select
-                                    value={selectedStatus}
-                                    onChange={(e) => setSelectedStatus(e.target.value)}
-                                    className="w-full h-8 px-2 text-xs border rounded-md bg-background"
-                                >
-                                    <option value="">Svi statusi</option>
-                                    <option value="active">Aktivne</option>
-                                    <option value="inactive">Neaktivne</option>
-                                </select>
-                            </div>
-                            */}
-
                             {/* Width Filter */}
                             <div className="space-y-1 relative">
-                                <Label className="text-sm font-medium ">
+                                <Label className="text-sm font-medium">
                                     Širina
                                 </Label>
                                 <select
                                     value={selectedWidth}
                                     onChange={(e) => setSelectedWidth(e.target.value)}
-                                    className=" appearance-none border-input file:text-foreground  placeholder:text-muted-foreground    flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                                    className="appearance-none border-input file:text-foreground placeholder:text-muted-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                                 >
                                     <option value="" className="dark:bg-card dark:text-card-foreground">Sve širine</option>
-                                    {uniqueWidths.map(width => (
-                                        <option
-                                            key={width}
-                                            value={width}
-                                            className="dark:bg-card dark:text-card-foreground"
-                                        >
-                                            {width} {getAvailableHeightsCount(width) > 0 && `(${getAvailableHeightsCount(width)} visina)`}
-                                        </option>
-                                    ))}
+                                    {allWidths.map(width => {
+                                        const isAvailable = availableWidths.has(width);
+                                        return (
+                                            <option
+                                                key={width}
+                                                value={width}
+                                                disabled={!isAvailable}
+                                                className={!isAvailable ? 'text-muted-foreground/50 bg-muted/30 dark:bg-card dark:text-card-foreground' : 'dark:bg-card dark:text-card-foreground'}
+                                                title={!isAvailable ? 'Ova širina nije dostupna za trenutne filtere' : ''}
+                                            >
+                                                {width}{!isAvailable && ' (nedostupno)'}
+                                            </option>
+                                        );
+                                    })}
                                 </select>
                                 <ChevronDown className="absolute right-2 top-9 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                             </div>
 
                             {/* Height Filter */}
                             <div className="space-y-1 relative">
-                                <Label className="text-sm font-medium ">
+                                <Label className="text-sm font-medium">
                                     Visina
-
                                 </Label>
                                 <select
                                     value={selectedHeight}
                                     onChange={(e) => setSelectedHeight(e.target.value)}
-                                    className=" appearance-none border-input file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-                                    disabled={!selectedWidth}
+                                    className="appearance-none border-input file:text-foreground placeholder:text-muted-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
                                 >
-                                    <option value="" className="dark:bg-card dark:text-card-foreground">
-                                        {selectedWidth ? 'Sve dostupne visine' : 'Prvo izaberite širinu'}
-                                    </option>
-                                    {uniqueHeights.map(height => {
-                                        const isAvailable = !selectedWidth || availableHeights.includes(height);
+                                    <option value="" className="dark:bg-card dark:text-card-foreground">Sve visine</option>
+                                    {allHeights.map(height => {
+                                        const isAvailable = availableHeights.has(height);
                                         return (
                                             <option
                                                 key={height}
                                                 value={height}
                                                 disabled={!isAvailable}
                                                 className={!isAvailable ? 'text-muted-foreground/50 bg-muted/30 dark:bg-card dark:text-card-foreground' : 'dark:bg-card dark:text-card-foreground'}
-                                                title={!isAvailable ? 'Ova visina nije dostupna za odabranu širinu' : ''}
+                                                title={!isAvailable ? 'Ova visina nije dostupna za trenutne filtere' : ''}
                                             >
-                                                {height}
-                                                {!isAvailable && ' (nema na stanju)'}
+                                                {height}{!isAvailable && ' (nedostupno)'}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                                <ChevronDown className="absolute right-2 top-9 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                            </div>
+
+                            {/* Dimenzije Filter */}
+                            <div className="space-y-1 relative">
+                                <Label className="text-sm font-medium">
+                                    Prečnik
+                                </Label>
+                                <select
+                                    value={selectedDimenzije}
+                                    onChange={(e) => setSelectedDimenzije(e.target.value)}
+                                    className="appearance-none border-input file:text-foreground placeholder:text-muted-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                                >
+                                    <option value="" className="dark:bg-card dark:text-card-foreground">Sve prečnike</option>
+                                    {allDimenzijes.map(dimenzije => {
+                                        const isAvailable = availableDimenzijes.has(dimenzije);
+                                        return (
+                                            <option
+                                                key={dimenzije}
+                                                value={dimenzije}
+                                                disabled={!isAvailable}
+                                                className={!isAvailable ? 'text-muted-foreground/50 bg-muted/30 dark:bg-card dark:text-card-foreground' : 'dark:bg-card dark:text-card-foreground'}
+                                                title={!isAvailable ? 'Ovaj prečnik nije dostupan za trenutne filtere' : ''}
+                                            >
+                                                {dimenzije}{!isAvailable && ' (nedostupno)'}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                                <ChevronDown className="absolute right-2 top-9 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                            </div>
+
+                            {/* Kategorija Filter */}
+                            <div className="space-y-1 relative">
+                                <Label className="text-sm font-medium">
+                                    Kategorija
+                                </Label>
+                                <select
+                                    value={selectedKategorija}
+                                    onChange={(e) => setSelectedKategorija(e.target.value)}
+                                    className="appearance-none border-input file:text-foreground placeholder:text-muted-foreground flex h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+                                >
+                                    <option value="" className="dark:bg-card dark:text-card-foreground">Sve kategorije</option>
+                                    {allKategorijas.map(kategorija => {
+                                        const isAvailable = availableKategorijas.has(kategorija);
+                                        return (
+                                            <option
+                                                key={kategorija}
+                                                value={kategorija}
+                                                disabled={!isAvailable}
+                                                className={!isAvailable ? 'text-muted-foreground/50 bg-muted/30 dark:bg-card dark:text-card-foreground' : 'dark:bg-card dark:text-card-foreground'}
+                                                title={!isAvailable ? 'Ova kategorija nije dostupna za trenutne filtere' : ''}
+                                            >
+                                                {kategorija}{!isAvailable && ' (nedostupno)'}
                                             </option>
                                         );
                                     })}
@@ -582,6 +616,30 @@ export function DataTable<TData, TValue>({
                                 </button>
                             </div>
                         )}
+                        {showAdvancedFilters && selectedDimenzije && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-full text-xs">
+                                <span className="font-medium">Prečnik:</span>
+                                <span className="text-muted-foreground">{selectedDimenzije}</span>
+                                <button
+                                    onClick={() => setSelectedDimenzije("")}
+                                    className="ml-1 hover:text-destructive"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )}
+                        {showAdvancedFilters && selectedKategorija && (
+                            <div className="flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900 rounded-full text-xs">
+                                <span className="font-medium">Kategorija:</span>
+                                <span className="text-muted-foreground">{selectedKategorija}</span>
+                                <button
+                                    onClick={() => setSelectedKategorija("")}
+                                    className="ml-1 hover:text-destructive"
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        )}
                         {activeFiltersCount > 0 && (
                             <Button
                                 variant="destructive"
@@ -619,7 +677,7 @@ export function DataTable<TData, TValue>({
                                     checked={column.getIsVisible()}
                                     onCheckedChange={(value) => column.toggleVisibility(!!value)}
                                 >
-                                    {column.id}
+                                    {column.id === 'dimenzije' ? 'Prečnik' : column.id}
                                 </DropdownMenuCheckboxItem>
                             ))}
                     </DropdownMenuContent>

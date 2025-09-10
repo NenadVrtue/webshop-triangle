@@ -52,9 +52,8 @@ Primili ste novi upit o gumi od kupca **{{ $inquiryData['customer_name'] }}**.
 
 @if($inquiryData['user'])
 ## Registrovani korisnik
-
-**Korisnik ID:** {{ $inquiryData['user']->id }}  
-**Ime:** {{ $inquiryData['user']->name }}  
+  
+**Ime:** {{ $inquiryData['user']->full_name }}  
 **Email:** {{ $inquiryData['user']->email }}  
 @if($inquiryData['user']->company_name)
 **Firma:** {{ $inquiryData['user']->company_name }}  

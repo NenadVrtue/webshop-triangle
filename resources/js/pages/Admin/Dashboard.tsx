@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { DataTableColumnHeader } from '@/components/table/column-header';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -82,6 +83,7 @@ interface Tire {
     nabavna_cijena?: number;
     kolicina_na_stanju: number;
     sezona?: string;
+    kategorija?: string;
     is_active: boolean;
     created_at: string;
     updated_at: string;
@@ -165,6 +167,32 @@ const formatDate = (dateString: string) => {
         minute: '2-digit'
     });
 };
+export function ExpandableImeCell({ naziv }: { naziv: string }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // Add null/undefined check
+    if (!naziv) {
+        return <div>-</div>;
+    }
+
+    return (
+        <div
+            className={`cursor-pointer transition-all duration-200 ${isExpanded
+                ? "max-w-none whitespace-normal break-words"
+                : "max-w-34 h-auto md:max-w-none truncate"
+                }`}
+            title={naziv}
+            onClick={() => setIsExpanded(!isExpanded)}
+        >
+            {naziv}
+            {!isExpanded && naziv.length > 20 && (
+                <span className="ml-1 text-xs text-muted-foreground md:hidden">
+                    👆
+                </span>
+            )}
+        </div>
+    );
+}
 
 const createAdminTireColumns = (
     updatingTire: number | null,
@@ -180,30 +208,93 @@ const createAdminTireColumns = (
         {
             accessorKey: "ime",
             header: "Naziv",
+            enableHiding: false,
+            meta: {
+                className: "max-w-34 h-auto md:max-w-56 wrap"
+            },
             cell: ({ row }) => (
-                <div className="max-w-[200px] truncate">{row.getValue("ime")}</div>
+
+                <ExpandableImeCell naziv={row.getValue("ime") as string} />
             ),
         },
         {
-            accessorKey: "dimenzije",
-            header: "Dimenzije",
-            cell: ({ row }) => (
-                <div>{row.getValue("dimenzije")}</div>
+            accessorKey: "kolicina_na_stanju",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Količina na stanju" />
             ),
+            cell: ({ row }) => {
+                const quantity = row.getValue("kolicina_na_stanju") as number;
+                return (
+                    <div className={quantity === 0 ? "text-red-600 font-medium" : ""}>
+
+                        {quantity}
+                    </div>
+                );
+            },
+
         },
+        {
+            accessorKey: "veleprodajna_cijena",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="VP Cijena" />
+            ),
+            cell: ({ row }) => {
+                const price = row.getValue("veleprodajna_cijena") as number;
+                if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
+                return (
+                    <div className="font-medium">
+                        {price} KM
+                    </div>
+                );
+            },
+
+        },
+        {
+            accessorKey: "maloprodajna_cijena",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="MP Cijena" />
+            ),
+            cell: ({ row }) => {
+                const price = row.getValue("maloprodajna_cijena") as number;
+                if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
+                return (
+                    <div className="font-medium">
+                        {price} KM
+                    </div>
+                );
+            },
+
+        },
+
         {
             accessorKey: "sirina",
-            header: "Širina",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Širina" />
+            ),
             cell: ({ row }) => (
                 <div>{row.getValue("sirina")}</div>
             ),
+
         },
         {
             accessorKey: "visina",
-            header: "Visina",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Visina" />
+            ),
             cell: ({ row }) => (
                 <div>{row.getValue("visina")}</div>
             ),
+
+        },
+        {
+            accessorKey: "dimenzije",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Prečnik" />
+            ),
+            cell: ({ row }) => (
+                <div>{row.getValue("dimenzije")}</div>
+            ),
+
         },
         {
             accessorKey: "eprel_code",
@@ -211,37 +302,14 @@ const createAdminTireColumns = (
             cell: ({ row }) => (
                 <a target='_blank' href={row.getValue("eprel_code")}>{row.getValue("eprel_code")}</a>
             ),
+
         },
         {
-            accessorKey: "veleprodajna_cijena",
-            header: "VP Cijena",
+            accessorKey: "kategorija",
+            header: "Kategorija",
             cell: ({ row }) => (
-                <div>{formatCurrency(row.getValue("veleprodajna_cijena"))}</div>
+                <div>{row.getValue("kategorija")}</div>
             ),
-        },
-        {
-            accessorKey: "maloprodajna_cijena",
-            header: "MP Cijena",
-            cell: ({ row }) => (
-                <div>{formatCurrency(row.getValue("maloprodajna_cijena"))}</div>
-            ),
-        },
-        {
-            accessorKey: "kolicina_na_stanju",
-            header: "Stanje",
-            cell: ({ row }) => {
-                const quantity = row.getValue("kolicina_na_stanju") as number;
-                return (
-                    <div className={quantity === 0 ? "text-red-600 font-medium" : ""}>
-                        {quantity}
-                        {quantity === 0 && (
-                            <Badge variant="destructive" className="ml-2 text-xs">
-                                Nema na stanju
-                            </Badge>
-                        )}
-                    </div>
-                );
-            },
         },
         {
             accessorKey: "sezona",
@@ -253,6 +321,8 @@ const createAdminTireColumns = (
         {
             accessorKey: "is_active",
             header: "Status",
+
+
             cell: ({ row }) => {
                 const tire = row.original;
                 const isActive = tire.is_active;
@@ -269,11 +339,7 @@ const createAdminTireColumns = (
                         <Badge variant={isActive ? "default" : "secondary"}>
                             {isActive ? "Aktivna" : "Neaktivna"}
                         </Badge>
-                        {quantity === 0 && (
-                            <Badge variant="destructive" className="text-xs">
-                                Nema na stanju
-                            </Badge>
-                        )}
+
                     </div>
                 );
             },

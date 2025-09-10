@@ -86,7 +86,7 @@ const createUserTireColumns = (
             header: "Naziv",
             enableHiding: false,
             meta: {
-                className: "max-w-34 h-auto md:max-w-none wrap"
+                className: "max-w-34 h-auto md:max-w-56 wrap"
             },
             cell: ({ row }) => (
 
@@ -135,7 +135,7 @@ const createUserTireColumns = (
                     </div>
                 );
             },
-            enableHiding: false,
+
         },
         {
             accessorKey: "maloprodajna_cijena",
@@ -177,7 +177,7 @@ const createUserTireColumns = (
         {
             accessorKey: "dimenzije",
             header: ({ column }) => (
-                <DataTableColumnHeader column={column} title="Dimenzije" />
+                <DataTableColumnHeader column={column} title="Prečnik" />
             ),
             cell: ({ row }) => (
                 <div>{row.getValue("dimenzije")}</div>
