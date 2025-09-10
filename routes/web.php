@@ -13,6 +13,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Sales\DashboardController as SalesDashboardController;
+use App\Http\Controllers\ContactInquiryController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -31,6 +32,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}/success', [OrderController::class, 'success'])->name('orders.success');
+    
+    // Contact inquiry route
+    Route::post('/contact-inquiry', [ContactInquiryController::class, 'store'])->name('contact-inquiry.store');
 });
 
 Route::get('/register', [RegisteredUserController::class, 'create'])

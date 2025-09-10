@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,12 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/table/data-table';
 import { DataTableColumnHeader } from '@/components/table/column-header';
+import { ContactFormDialog } from '@/components/contact-form-dialog';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatCurrency } from '@/lib/utils';
 import { useCartContext } from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
-import { ShoppingCart } from 'lucide-react';
-import { ExpandableNazivCell } from '@/components/table/columns';
+import { ShoppingCart, MessageCircle } from 'lucide-react';
 
 interface Tire {
     id: number;
@@ -29,6 +29,7 @@ interface Tire {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+    kategorija?: string;
 }
 
 interface DashboardProps {
@@ -41,6 +42,34 @@ const breadcrumbs: BreadcrumbItem[] = [
         href: '/pocetna',
     },
 ];
+
+// Expandable cell component for naziv
+export function ExpandableImeCell({ naziv }: { naziv: string }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    // Add null/undefined check
+    if (!naziv) {
+        return <div>-</div>;
+    }
+
+    return (
+        <div
+            className={`cursor-pointer transition-all duration-200 ${isExpanded
+                ? "max-w-none whitespace-normal break-words"
+                : "max-w-34 h-auto md:max-w-none truncate"
+                }`}
+            title={naziv}
+            onClick={() => setIsExpanded(!isExpanded)}
+        >
+            {naziv}
+            {!isExpanded && naziv.length > 20 && (
+                <span className="ml-1 text-xs text-muted-foreground md:hidden">
+                    👆
+                </span>
+            )}
+        </div>
+    );
+}
 
 const createUserTireColumns = (
     onAddToCart: (tire: Tire) => void
@@ -61,7 +90,7 @@ const createUserTireColumns = (
             },
             cell: ({ row }) => (
 
-                <ExpandableNazivCell naziv={row.getValue("ime") as string} />
+                <ExpandableImeCell naziv={row.getValue("ime") as string} />
             ),
         },
         {
@@ -73,10 +102,18 @@ const createUserTireColumns = (
                 const quantity = row.getValue("kolicina_na_stanju") as number;
                 return (
                     <div className={quantity === 0 ? "text-red-600 font-medium" : ""}>
-                        {quantity}
-                        {quantity === 0 && (
+
+                        {quantity === 0 ? (
                             <Badge variant="destructive" className="ml-2 text-xs">
                                 Nema na stanju
+                            </Badge>
+                        ) : quantity < 4 ? (
+                            <Badge variant="pending" className="ml-2 text-xs">
+                                Dostupno 4 ili manje
+                            </Badge>
+                        ) : (
+                            <Badge variant="delivered" className="ml-2 text-xs">
+                                Dostupno
                             </Badge>
                         )}
                     </div>
@@ -153,7 +190,14 @@ const createUserTireColumns = (
             cell: ({ row }) => (
                 <a target='_blank' href={row.getValue("eprel_code")}>{row.getValue("eprel_code")}</a>
             ),
-            enableHiding: false,
+
+        },
+        {
+            accessorKey: "kategorija",
+            header: "Kategorija",
+            cell: ({ row }) => (
+                <div>{row.getValue("kategorija")}</div>
+            ),
         },
         {
             accessorKey: "sezona",
@@ -162,29 +206,7 @@ const createUserTireColumns = (
                 <div>{row.getValue("sezona")}</div>
             ),
         },
-        {
-            accessorKey: "is_active",
-            header: "Status",
-            cell: ({ row }) => {
-                const tire = row.original;
-                const isActive = tire.is_active;
-                console.log('guma je aktivna: ', isActive);
-                const quantity = tire.kolicina_na_stanju;
 
-                return (
-                    <div className="flex items-center gap-2">
-                        <Badge variant={isActive ? "delivered" : "cancelled"}>
-                            {isActive ? "Aktivna" : "Neaktivna"}
-                        </Badge>
-                        {quantity === 0 && (
-                            <Badge variant="destructive" className="text-xs">
-                                Nema na stanju
-                            </Badge>
-                        )}
-                    </div>
-                );
-            },
-        },
         {
             id: "actions",
             header: "Akcije",
@@ -194,16 +216,30 @@ const createUserTireColumns = (
                 const canAddToCart = tire.is_active && tire.kolicina_na_stanju > 0;
 
                 return (
-                    <Button
-                        onClick={() => onAddToCart(tire)}
-                        size="sm"
-                        variant={isActive ? "default" : "secondary"}
-                        className="h-8 flex items-center gap-2"
-                        disabled={!canAddToCart}
-                    >
-                        <ShoppingCart className="h-4 w-4" />
-                        {canAddToCart ? "Dodaj u korpu" : "Nije dostupno"}
-                    </Button>
+                    <>
+                        {canAddToCart ? (
+                            <Button
+                                onClick={() => onAddToCart(tire)}
+                                size="sm"
+                                variant={isActive ? "default" : "secondary"}
+                                className="h-8 flex items-center gap-2"
+                            >
+                                <ShoppingCart className="h-4 w-4" />
+                                Dodaj u korpu
+                            </Button>
+                        ) : (
+                            <ContactFormDialog tire={tire}>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-8 flex items-center gap-2"
+                                >
+                                    <MessageCircle className="h-4 w-4" />
+                                    Pošalji upit
+                                </Button>
+                            </ContactFormDialog>
+                        )}
+                    </>
                 );
             },
         },

@@ -36,7 +36,8 @@ class DashboardController extends Controller
                     'maloprodajna_cijena' => $tire->mp_cijena ?? 0,
                     'nabavna_cijena' => 0, // Not in model fillable yet
                     'kolicina_na_stanju' => $tire->kolicina_na_stanju ?? 0,
-                    'sezona' => $tire->sezona ?? 'N/A',
+                    'sezona' => $tire->sezona ?? 'nedostupno',
+                    'kategorija' => $tire->kategorija ?? 'nedostupno',
                     'is_active' => $tire->is_active ?? true,
                     'created_at' => $tire->created_at,
                     'updated_at' => $tire->updated_at,
