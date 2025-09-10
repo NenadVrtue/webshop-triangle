@@ -39,32 +39,36 @@ export default function Contact() {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div>
-                                <p className="text-sm text-muted-foreground mb-1">Opšta pitanja</p>
+                                <p className="text-sm text-muted-foreground mb-1">E-mail:</p>
                                 <a
-                                    href="mailto:info@webshop-triangle.com"
+                                    href="mailto:prodaja@pringdoo.com"
                                     className="text-lg font-semibold text-blue-600 hover:text-blue-700 transition-colors"
                                 >
-                                    info@webshop-triangle.com
+                                    prodaja@pringdoo.com
                                 </a>
                             </div>
+
                             <div>
-                                <p className="text-sm text-muted-foreground mb-1">Tehnička podrška</p>
+                                <p className="text-sm text-muted-foreground mb-1">Telefon:</p>
                                 <a
-                                    href="mailto:support@webshop-triangle.com"
+                                    href="tel:+38765639346"
                                     className="text-lg font-semibold text-blue-600 hover:text-blue-700 transition-colors"
                                 >
-                                    support@webshop-triangle.com
+                                    +387 65 639 346
                                 </a>
                             </div>
+
                             <div>
-                                <p className="text-sm text-muted-foreground mb-1">Narudžbe</p>
+                                <p className="text-sm text-muted-foreground mb-1">Telefon:</p>
                                 <a
-                                    href="mailto:orders@webshop-triangle.com"
+                                    href="tel:+38765186626"
                                     className="text-lg font-semibold text-blue-600 hover:text-blue-700 transition-colors"
                                 >
-                                    orders@webshop-triangle.com
+                                    +387 65 186 626
                                 </a>
                             </div>
+
+
                         </CardContent>
                     </Card>
                 </div>
@@ -83,8 +87,8 @@ export default function Contact() {
                                 <h3 className="font-semibold mb-2">Radno vrijeme</h3>
                                 <div className="space-y-1 text-sm text-muted-foreground">
                                     <p>Ponedjeljak - Petak: 08:00 - 17:00</p>
-                                    <p>Subota: 09:00 - 14:00</p>
-                                    <p>Nedjelja: Zatvoreno</p>
+
+                                    <p>Subota i Nedjelja: Zatvoreno</p>
                                 </div>
                             </div>
                             <div>
