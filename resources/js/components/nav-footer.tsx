@@ -20,7 +20,7 @@ export function NavFooter({
                                 asChild
                                 className=""
                             >
-                                <a href={item.href} target="_blank" rel="noopener noreferrer">
+                                <a href={item.href} >
                                     {item.icon && <Icon iconNode={item.icon} className="h-5 w-5" />}
                                     <span>{item.title}</span>
                                 </a>

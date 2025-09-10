@@ -73,7 +73,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
                     </div>
 
                     <div className="grid gap-2">
-                        <Label htmlFor="password_confirmation">Confirm password</Label>
+                        <Label htmlFor="password_confirmation">Ponovite password</Label>
                         <Input
                             id="password_confirmation"
                             type="password"
@@ -89,7 +89,7 @@ export default function ResetPassword({ token, email }: ResetPasswordProps) {
 
                     <Button type="submit" className="mt-4 w-full" disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
-                        Reset password
+                        Resetuj password
                     </Button>
                 </div>
             </form>
