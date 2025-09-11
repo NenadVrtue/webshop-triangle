@@ -74,13 +74,7 @@ export function ExpandableImeCell({ naziv }: { naziv: string }) {
 const createUserTireColumns = (
     onAddToCart: (tire: Tire) => void
 ): ColumnDef<Tire>[] => [
-        {
-            accessorKey: "sifra",
-            header: "Šifra",
-            cell: ({ row }) => (
-                <div className="font-medium">{row.getValue("sifra")}</div>
-            ),
-        },
+
         {
             accessorKey: "ime",
             header: "Naziv",
@@ -225,7 +219,7 @@ const createUserTireColumns = (
                                 className="h-8 flex items-center gap-2"
                             >
                                 <ShoppingCart className="h-4 w-4" />
-                                Dodaj u korpu
+                                <span className='hidden md:block'>Dodaj u korpu</span>
                             </Button>
                         ) : (
                             <ContactFormDialog tire={tire}>
@@ -235,7 +229,7 @@ const createUserTireColumns = (
                                     className="h-8 flex items-center gap-2"
                                 >
                                     <MessageCircle className="h-4 w-4" />
-                                    Pošalji upit
+                                    <span className='hidden md:block'>Pošalji upit</span>
                                 </Button>
                             </ContactFormDialog>
                         )}
@@ -265,7 +259,7 @@ function DashboardContent({ tires }: { tires: Tire[] }) {
     const userTireColumns = createUserTireColumns(handleAddToCart);
 
     return (
-        <div className="container mx-auto p-6 space-y-8">
+        <div className="container mx-auto p-6 px-1 md:px-2 lg:px-4 space-y-8">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
@@ -286,7 +280,7 @@ function DashboardContent({ tires }: { tires: Tire[] }) {
                         Pregled svih dostupnih guma za kupovinu
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className='px-1 md:px-2 lg:px-4'>
                     <DataTable
                         columns={userTireColumns}
                         data={tires}
