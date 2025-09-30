@@ -31,7 +31,6 @@ class SyncTiresToWoo implements ShouldQueue
                     'manage_stock' => true,
                     'stock_quantity' => (int) $tire->kolicina_na_stanju,
                     'status' => $tire->is_active ? 'publish' : 'draft',
-                    'description' => $tire->dimenzije ?: null,
                     'meta_data' => [
                         ['key' => 'vp_cijena', 'value' => $tire->vp_cijena],
                         ['key' => 'sirina', 'value' => $tire->sirina],
