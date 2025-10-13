@@ -143,7 +143,7 @@ export default function Success({ order }: SuccessProps) {
 
                                         <div className="flex justify-between text-lg font-bold">
                                             <span>Ukupno za plaćanje:</span>
-                                            <span className="text-primary">{(order.total || 0).toFixed(2)} KM</span>
+                                            <span className="">{(order.total || 0).toFixed(2)} KM</span>
                                         </div>
 
                                         {(order.discount_amount || 0) > 0 && (

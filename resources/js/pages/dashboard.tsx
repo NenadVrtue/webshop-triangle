@@ -24,6 +24,8 @@ interface Tire {
     veleprodajna_cijena?: number;
     maloprodajna_cijena?: number;
     nabavna_cijena?: number;
+    discount_percentage?: number;
+    discounted_price?: number;
     kolicina_na_stanju: number;
     sezona?: string;
     is_active: boolean;
@@ -122,10 +124,30 @@ const createUserTireColumns = (
             ),
             cell: ({ row }) => {
                 const price = row.getValue("veleprodajna_cijena") as number;
+                const discountPercentage = row.original.discount_percentage || 0;
+                const discountedPrice = row.original.discounted_price || price;
+
                 if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
+
                 return (
-                    <div className="font-medium">
-                        {price} KM
+                    <div>
+                        {discountPercentage > 0 ? (
+                            <div>
+                                <div className="text-sm line-through text-muted-foreground">
+                                    {price.toFixed(2)} KM
+                                </div>
+                                <div className="font-bold text-green-600">
+                                    {discountedPrice.toFixed(2)} KM
+                                </div>
+                                <Badge variant="secondary" className="text-xs mt-1">
+                                    -{discountPercentage}%
+                                </Badge>
+                            </div>
+                        ) : (
+                            <div className="font-medium">
+                                {price.toFixed(2)} KM
+                            </div>
+                        )}
                     </div>
                 );
             },

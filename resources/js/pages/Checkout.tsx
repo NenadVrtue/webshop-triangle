@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import type { CartItem, User } from '@/types';
 import { Link } from '@inertiajs/react';
+import { Badge } from '@/components/ui/badge';
 
 interface CheckoutFormData {
     customer_name: string;
@@ -62,9 +63,14 @@ export default function Checkout() {
         return sum + (price * item.quantity);
     }, 0);
 
-    // Note: Discount will be calculated on backend based on user and tire categories
-    // This is just for display - actual discount is applied server-side
-    const discount = 0; // Backend will calculate this
+    // Calculate discount based on tire discount percentages
+    const discount = cart.reduce((sum, item) => {
+        const price = item.tire.veleprodajna_cijena || 0;
+        const discountPercentage = item.tire.discount_percentage || 0;
+        const discountAmount = (price * discountPercentage / 100) * item.quantity;
+        return sum + discountAmount;
+    }, 0);
+
     const total = subtotal - discount;
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -403,12 +409,26 @@ export default function Checkout() {
                                                             </div>
 
                                                             <div className="text-right">
-                                                                <p className="text-gray-600 dark:text-foreground text-sm">
-                                                                    Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena} KM` : 'N/A'}
-                                                                </p>
-                                                                <p className="font-medium dark:text-secondary text-primary text-lg">
-                                                                    Ukupno: {totalItemPrice.toFixed(2)} KM
-                                                                </p>
+                                                                {item.tire.discount_percentage && item.tire.discount_percentage > 0 ? (
+                                                                    <>
+                                                                        <p className="text-sm line-through text-muted-foreground">
+                                                                            {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena.toFixed(2)} KM` : 'N/A'}
+                                                                        </p>
+
+                                                                        <p className="font-medium dark:text-secondary text-primary text-lg">
+                                                                            {((item.tire.discounted_price || 0) * item.quantity).toFixed(2)} KM
+                                                                        </p>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <p className="text-gray-600 dark:text-foreground text-sm">
+                                                                            Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena.toFixed(2)} KM` : 'N/A'}
+                                                                        </p>
+                                                                        <p className="font-medium dark:text-secondary text-primary text-lg">
+                                                                            Ukupno: {totalItemPrice.toFixed(2)} KM
+                                                                        </p>
+                                                                    </>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -421,14 +441,16 @@ export default function Checkout() {
                                         {/* Totals */}
                                         <div className="space-y-2">
                                             <div className="flex justify-between">
-                                                <span>Subtotal:</span>
+                                                <span>Međuzbir:</span>
                                                 <span>{subtotal.toFixed(2)} KM</span>
                                             </div>
 
-                                            <div className="flex justify-between text-sm text-muted-foreground">
-                                                <span>Popust:</span>
-                                                <span className="text-green-600">Primenjuje se pri potvrdi</span>
-                                            </div>
+                                            {discount > 0 && (
+                                                <div className="flex justify-between text-green-600">
+                                                    <span>Popust:</span>
+                                                    <span>-{discount.toFixed(2)} KM</span>
+                                                </div>
+                                            )}
 
                                             <Separator />
 
@@ -436,9 +458,6 @@ export default function Checkout() {
                                                 <span>Ukupno:</span>
                                                 <span>{total.toFixed(2)} KM</span>
                                             </div>
-                                            <p className="text-xs text-muted-foreground">
-                                                * Konačna cijena sa popustom biće prikazana nakon potvrde narudžbe
-                                            </p>
                                         </div>
 
                                         <Button

@@ -118,28 +118,19 @@ class OrderController extends Controller
             $unitPrice = $tire->vp_cijena ?? 0;
             $lineTotal = $unitPrice * $item['quantity'];
 
-            // Prvo proveri app-wide popust za ovu kategoriju
-            $appWideDiscount = Discount::appWide()
-                ->where('tire_kategorija', $tire->kategorija)
-                ->first();
-
-            // Zatim proveri per-user popust za ovu kategoriju
+            // Prvo proveri per-user popust za ovu kategoriju (higher priority)
             $perUserDiscount = Discount::perUser()
                 ->where('user_id', $user->id)
                 ->where('tire_kategorija', $tire->kategorija)
                 ->first();
 
-            // Primeni veći popust (per-user ima prioritet ako je veći)
-            $applicableDiscount = null;
-            if ($perUserDiscount && $appWideDiscount) {
-                $applicableDiscount = $perUserDiscount->percentage >= $appWideDiscount->percentage
-                    ? $perUserDiscount
-                    : $appWideDiscount;
-            } elseif ($perUserDiscount) {
-                $applicableDiscount = $perUserDiscount;
-            } elseif ($appWideDiscount) {
-                $applicableDiscount = $appWideDiscount;
-            }
+            // Zatim proveri app-wide popust za ovu kategoriju (lower priority)
+            $appWideDiscount = Discount::appWide()
+                ->where('tire_kategorija', $tire->kategorija)
+                ->first();
+
+            // Per-user discount ALWAYS takes priority over app-wide, regardless of percentage
+            $applicableDiscount = $perUserDiscount ?? $appWideDiscount;
 
             if ($applicableDiscount) {
                 $lineDiscount = $lineTotal * ($applicableDiscount->percentage / 100);

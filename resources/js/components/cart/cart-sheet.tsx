@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { useCart } from "@/hooks/useCart";
 import { Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
 import type { Tire, CartItem } from '@/types';
+import { Badge } from '../ui/badge';
 
 interface CartSheetProps {
     children: React.ReactNode;
@@ -40,10 +41,21 @@ export function CartSheet({
     const cart = propCart ?? hookData.cart;
     const itemCount = propItemCount ?? hookData.itemCount;
     const totalQuantity = propTotalQuantity ?? hookData.totalQuantity;
-    const cartTotal = cart.reduce((sum, item) => {
+
+    // Calculate subtotal and discount
+    const cartSubtotal = cart.reduce((sum, item) => {
         const itemPrice = item.tire.veleprodajna_cijena || 0;
         return sum + (itemPrice * item.quantity);
     }, 0);
+
+    const cartDiscount = cart.reduce((sum, item) => {
+        const itemPrice = item.tire.veleprodajna_cijena || 0;
+        const discountPercentage = item.tire.discount_percentage || 0;
+        const discountAmount = (itemPrice * discountPercentage / 100) * item.quantity;
+        return sum + discountAmount;
+    }, 0);
+
+    const cartTotal = cartSubtotal - cartDiscount;
     const isLoaded = propIsLoaded ?? hookData.isLoaded;
 
     // Use prop functions if provided, otherwise use hook functions
@@ -201,12 +213,31 @@ export function CartSheet({
 
 
                                                     <div className="text-center lg:text-right">
-                                                        <p className="text-gray-600 dark:text-foreground text-sm">
-                                                            Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena} KM` : 'N/A'}
-                                                        </p>
-                                                        <p className="font-medium dark:text-secondary text-primary text-lg">
-                                                            Ukupno: {totalItemPrice.toFixed(2)} KM
-                                                        </p>
+                                                        {item.tire.discount_percentage && item.tire.discount_percentage > 0 ? (
+                                                            <>
+                                                                <p className="text-sm line-through text-muted-foreground">
+                                                                    {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena.toFixed(2)} KM` : 'N/A'}
+                                                                </p>
+                                                                <p className="text-green-600 font-medium text-sm">
+                                                                    {item.tire.discounted_price ? `${item.tire.discounted_price.toFixed(2)} KM` : 'N/A'}
+                                                                    <Badge variant="secondary" className="ml-1 text-xs">
+                                                                        -{item.tire.discount_percentage}%
+                                                                    </Badge>
+                                                                </p>
+                                                                <p className="font-medium dark:text-secondary text-primary text-lg">
+                                                                    Ukupno: {((item.tire.discounted_price || 0) * item.quantity).toFixed(2)} KM
+                                                                </p>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <p className="text-gray-600 dark:text-foreground text-sm">
+                                                                    Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena.toFixed(2)} KM` : 'N/A'}
+                                                                </p>
+                                                                <p className="font-medium dark:text-secondary text-primary text-lg">
+                                                                    Ukupno: {totalItemPrice.toFixed(2)} KM
+                                                                </p>
+                                                            </>
+                                                        )}
                                                     </div>
 
 
@@ -223,7 +254,18 @@ export function CartSheet({
                             <div className=" border-t w-full absolute  bottom-0 bg-background pt-4 px-4 space-y-4">
 
                                 {/* Cart Total */}
-                                <div className="pt-0 lg:pt-4 ">
+                                <div className="pt-0 lg:pt-4 space-y-2">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span>Međuzbir:</span>
+                                        <span>{cartSubtotal.toFixed(2)} KM</span>
+                                    </div>
+                                    {cartDiscount > 0 && (
+                                        <div className="flex justify-between items-center text-sm text-green-600">
+                                            <span>Popust:</span>
+                                            <span>-{cartDiscount.toFixed(2)} KM</span>
+                                        </div>
+                                    )}
+
                                     <div className="flex justify-between items-center">
                                         <span className="text-lg font-semibold">Ukupno:</span>
                                         <span className="text-xl font-bold">{cartTotal.toFixed(2)} KM</span>

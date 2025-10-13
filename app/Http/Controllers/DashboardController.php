@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Tire;
 use App\Models\Discount;
+use App\Models\Tire;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -20,16 +20,26 @@ class DashboardController extends Controller
         }
 
         $user = $request->user();
-        
+
         // Get user's discounts if authenticated
         $userDiscounts = [];
         if ($user) {
-            $userDiscounts = Discount::where('user_id', $user->id)
-                ->orWhere('scope', 'app_wide')
+            // Get per-user discounts (higher priority)
+            $perUserDiscounts = Discount::where('user_id', $user->id)
                 ->get()
                 ->keyBy('tire_kategorija')
-                ->map(fn($discount) => $discount->percentage)
+                ->map(fn ($discount) => $discount->percentage)
                 ->toArray();
+
+            // Get app-wide discounts (lower priority)
+            $appWideDiscounts = Discount::where('scope', 'app_wide')
+                ->get()
+                ->keyBy('tire_kategorija')
+                ->map(fn ($discount) => $discount->percentage)
+                ->toArray();
+
+            // Merge with per-user taking priority
+            $userDiscounts = array_merge($appWideDiscounts, $perUserDiscounts);
         }
 
         // Get all tires with proper data mapping for DataTable
@@ -40,7 +50,7 @@ class DashboardController extends Controller
                 $discountPercentage = $userDiscounts[$tire->kategorija] ?? 0;
                 $originalPrice = (float) ($tire->veleprodajna_cijena ?? 0);
                 $discountedPrice = $originalPrice * (1 - $discountPercentage / 100);
-                
+
                 return [
                     'id' => $tire->id,
                     'sifra' => $tire->sifra,

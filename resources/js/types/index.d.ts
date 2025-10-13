@@ -54,6 +54,8 @@ export interface Tire {
     veleprodajna_cijena?: number;
     maloprodajna_cijena?: number;
     nabavna_cijena?: number;
+    discount_percentage?: number;
+    discounted_price?: number;
     kolicina_na_stanju: number;
     sezona?: string;
     is_active: boolean;
