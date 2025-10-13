@@ -16,11 +16,18 @@ Vaša narudžba je proslijeđena na odobravanje.
 
 ## Ukupno
 
-**Subtotal:** {{ number_format($order->subtotal, 2) }} KM
+@component('mail::panel')
+**Subtotal:** {{ number_format($order->subtotal, 2) }} KM  
 @if($order->discount_amount > 0)
-**Popust:** -{{ number_format($order->discount_amount, 2) }} KM
+**Popust:** -{{ number_format($order->discount_amount, 2) }} KM  
+---  
 @endif
-**Ukupno:** {{ number_format($order->total, 2) }} KM
+**Ukupno za plaćanje:** {{ number_format($order->total, 2) }} KM
+@if($order->discount_amount > 0)
+
+_✓ Uštedili ste {{ number_format($order->discount_amount, 2) }} KM!_
+@endif
+@endcomponent
 
 @if($order->notes)
 ## Napomene

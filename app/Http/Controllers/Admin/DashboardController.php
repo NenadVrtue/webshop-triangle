@@ -3,10 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Discount;
 use App\Models\Order;
-use App\Models\Tire;
 use App\Models\PromoCode;
+use App\Models\Tire;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -53,10 +54,10 @@ class DashboardController extends Controller
         // Filter by customer search
         if ($request->filled('customer_search')) {
             $search = $request->customer_search;
-            $query->where(function($q) use ($search) {
-                $q->where('customer_name', 'like', '%' . $search . '%')
-                  ->orWhere('customer_email', 'like', '%' . $search . '%')
-                  ->orWhere('company_name', 'like', '%' . $search . '%');
+            $query->where(function ($q) use ($search) {
+                $q->where('customer_name', 'like', '%'.$search.'%')
+                    ->orWhere('customer_email', 'like', '%'.$search.'%')
+                    ->orWhere('company_name', 'like', '%'.$search.'%');
             });
         }
 
@@ -88,25 +89,26 @@ class DashboardController extends Controller
             });
 
         // Get all tires
-        $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'is_active', 'created_at', 'updated_at')
+        $tires = Tire::select('id', 'sifra', 'naziv', 'veleprodajna_cijena', 'maloprodajna_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'is_active', 'created_at', 'updated_at')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($tire) {
                 return [
                     'id' => $tire->id,
                     'sifra' => $tire->sifra,
-                    'ime' => $tire->ime,
+                    'ime' => $tire->naziv, // Map naziv to ime for frontend compatibility
                     'dimenzije' => $tire->dimenzije,
                     'sirina' => $tire->sirina,
                     'visina' => $tire->visina,
                     'eprel_code' => $tire->eprel_code,
-                    'veleprodajna_cijena' => $tire->vp_cijena ?? 0,
-                    'maloprodajna_cijena' => $tire->mp_cijena ?? 0,
-                    'nabavna_cijena' => 0, // Not in model fillable yet
-                    'kolicina_na_stanju' => $tire->kolicina_na_stanju ?? 0,
-                    'sezona' => $tire->sezona ?? 'N/A',
-                    'kategorija' => $tire->kategorija ?? 'N/A',
-                    'is_active' => $tire->is_active ?? true,
+                    'veleprodajna_cijena' => (float) ($tire->veleprodajna_cijena ?? 0),
+                    'maloprodajna_cijena' => (float) ($tire->maloprodajna_cijena ?? 0),
+                    'kolicina_na_stanju' => (int) $tire->kolicina_na_stanju,
+                    'sezona' => $tire->sezona,
+                    'kategorija' => $tire->kategorija,
+                    'is_active' => (bool) $tire->is_active,
+                    'created_at' => $tire->created_at->format('d.m.Y H:i'),
+                    'updated_at' => $tire->updated_at->format('d.m.Y H:i'),
                 ];
             });
 
@@ -126,11 +128,32 @@ class DashboardController extends Controller
                 ];
             });
 
+        // Get all discounts with user info
+        $discounts = Discount::with('user')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($discount) {
+                return [
+                    'id' => $discount->id,
+                    'scope' => $discount->scope,
+                    'user_id' => $discount->user_id,
+                    'user' => $discount->user ? [
+                        'id' => $discount->user->id,
+                        'full_name' => $discount->user->full_name,
+                        'company_name' => $discount->user->company_name,
+                    ] : null,
+                    'tire_kategorija' => $discount->tire_kategorija,
+                    'percentage' => (float) $discount->percentage,
+                    'created_at' => $discount->created_at->format('d.m.Y H:i'),
+                ];
+            });
+
         return Inertia::render('Admin/Dashboard', [
             'users' => $users,
             'orders' => $orders,
             'tires' => $tires,
             'promoCodes' => $promoCodes,
+            'discounts' => $discounts,
             'stats' => [
                 'total_users' => $users->count(),
                 'active_users' => $users->where('is_active', true)->count(),
@@ -143,18 +166,18 @@ class DashboardController extends Controller
                 'date_from' => $request->date_from,
                 'date_to' => $request->date_to,
                 'customer_search' => $request->customer_search,
-            ]
+            ],
         ]);
     }
 
     public function updateOrderStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|in:pending,processing,done,cancelled'
+            'status' => 'required|in:pending,processing,done,cancelled',
         ]);
 
         $order->update([
-            'status' => $request->status
+            'status' => $request->status,
         ]);
 
         return back()->with('success', 'Status narudžbe je uspešno ažuriran.');

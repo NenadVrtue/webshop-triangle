@@ -126,19 +126,31 @@ export default function Success({ order }: SuccessProps) {
 
                                     {/* Order Totals */}
                                     <div className="space-y-2">
+                                        <div className="flex justify-between">
+                                            <span>Subtotal:</span>
+                                            <span>{(order.subtotal || 0).toFixed(2)} KM</span>
+                                        </div>
+
                                         {(order.discount_amount || 0) > 0 && (
-                                            <div className="flex justify-between text-green-600">
-                                                <span>Popust:</span>
-                                                <span>-{(order.discount_amount || 0).toFixed(2)} KM</span>
-                                            </div>
+                                            <>
+                                                <div className="flex justify-between text-green-600">
+                                                    <span>Popust:</span>
+                                                    <span className="font-semibold">-{(order.discount_amount || 0).toFixed(2)} KM</span>
+                                                </div>
+                                                <Separator />
+                                            </>
                                         )}
 
-                                        {(order.discount_amount || 0) > 0 && <Separator />}
-
                                         <div className="flex justify-between text-lg font-bold">
-                                            <span>Ukupno:</span>
-                                            <span >{(order.total || 0).toFixed(2)} KM</span>
+                                            <span>Ukupno za plaćanje:</span>
+                                            <span className="text-primary">{(order.total || 0).toFixed(2)} KM</span>
                                         </div>
+
+                                        {(order.discount_amount || 0) > 0 && (
+                                            <p className="text-xs text-green-600 mt-2">
+                                                ✓ Uštedili ste {(order.discount_amount || 0).toFixed(2)} KM sa popustom!
+                                            </p>
+                                        )}
                                     </div>
                                 </CardContent>
                             </Card>

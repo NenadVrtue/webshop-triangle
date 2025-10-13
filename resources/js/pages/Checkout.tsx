@@ -62,7 +62,10 @@ export default function Checkout() {
         return sum + (price * item.quantity);
     }, 0);
 
-    const total = subtotal;
+    // Note: Discount will be calculated on backend based on user and tire categories
+    // This is just for display - actual discount is applied server-side
+    const discount = 0; // Backend will calculate this
+    const total = subtotal - discount;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -417,17 +420,25 @@ export default function Checkout() {
 
                                         {/* Totals */}
                                         <div className="space-y-2">
-                                            {/* <div className="flex justify-between">
+                                            <div className="flex justify-between">
                                                 <span>Subtotal:</span>
                                                 <span>{subtotal.toFixed(2)} KM</span>
                                             </div>
 
-                                            <Separator /> */}
+                                            <div className="flex justify-between text-sm text-muted-foreground">
+                                                <span>Popust:</span>
+                                                <span className="text-green-600">Primenjuje se pri potvrdi</span>
+                                            </div>
+
+                                            <Separator />
 
                                             <div className="flex justify-between text-lg font-bold">
                                                 <span>Ukupno:</span>
                                                 <span>{total.toFixed(2)} KM</span>
                                             </div>
+                                            <p className="text-xs text-muted-foreground">
+                                                * Konačna cijena sa popustom biće prikazana nakon potvrde narudžbe
+                                            </p>
                                         </div>
 
                                         <Button
