@@ -16,6 +16,7 @@ class OrderController extends Controller
     public function index()
     {
         $orders = Order::with('items.tire', 'user')->latest()->paginate(10);
+
         return OrderResource::collection($orders);
     }
 
@@ -41,7 +42,7 @@ class OrderController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $tire = Tire::findOrFail($item['tire_id']);
-                $unitPrice = $tire->veleprodajna_cijena ?? 0;
+                $unitPrice = $tire->vp_cijena ?? 0;
                 $total = $unitPrice * $item['quantity'];
 
                 OrderItem::create([
@@ -54,9 +55,11 @@ class OrderController extends Controller
             }
 
             DB::commit();
+
             return new OrderResource($order->load('items.tire', 'user'));
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json(['error' => 'Greška pri kreiranju narudžbe.'], 500);
         }
     }
@@ -68,12 +71,14 @@ class OrderController extends Controller
         ]);
 
         $order->update(['status' => $request->status]);
+
         return new OrderResource($order);
     }
 
     public function destroy(Order $order)
     {
         $order->delete();
+
         return response()->json(null, 204);
     }
 }

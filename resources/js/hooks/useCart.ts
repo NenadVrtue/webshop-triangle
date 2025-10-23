@@ -63,7 +63,7 @@ export function useCart() {
 
                 // Show toast for quantity update
                 toast.success(
-                    `Povećana količina: ${tire.naziv || tire.sifra} (${existingItem.quantity + quantity} kom)`,
+                    `Povećana količina: ${tire.ime || tire.sifra} (${existingItem.quantity + quantity} kom)`,
                     {
                         description: 'Proizvod je već u korpi, količina je povećana',
                     }
@@ -83,7 +83,7 @@ export function useCart() {
 
                 // Show toast for new item
                 toast.success(
-                    `Dodano u korpu: ${tire.naziv || tire.sifra}`,
+                    `Dodano u korpu: ${tire.ime || tire.sifra}`,
                     {
                         description: `Količina: ${quantity} kom`,
                     }
@@ -141,7 +141,7 @@ export function useCart() {
     // Calculate totals
     const itemCount = cart.length; // Count of unique item types, not total quantity
     const totalQuantity = cart.reduce((total, item) => total + item.quantity, 0); // Total quantity if needed
-    const total = cart.reduce((sum, item) => sum + (item.quantity * (item.tire.quantity || 0)), 0);
+    const total = cart.reduce((sum, item) => sum + (item.quantity * (item.tire.vp_cijena || 0)), 0);
 
     return {
         cart,

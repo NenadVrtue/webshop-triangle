@@ -38,11 +38,11 @@ Primili ste novi upit o gumi od kupca **{{ $inquiryData['customer_name'] }}**.
 @endif
 | Stanje na stanju | {{ $inquiryData['tire']->kolicina_na_stanju }} kom |
 | Status | {{ $inquiryData['tire']->is_active ? 'Aktivna' : 'Neaktivna' }} |
-@if($inquiryData['tire']->veleprodajna_cijena)
-| VP Cijena | {{ number_format($inquiryData['tire']->veleprodajna_cijena, 2) }} KM |
+@if($inquiryData['tire']->vp_cijena)
+| VP Cijena | {{ number_format($inquiryData['tire']->vp_cijena, 2) }} KM |
 @endif
-@if($inquiryData['tire']->maloprodajna_cijena)
-| MP Cijena | {{ number_format($inquiryData['tire']->maloprodajna_cijena, 2) }} KM |
+@if($inquiryData['tire']->mp_cijena)
+| MP Cijena | {{ number_format($inquiryData['tire']->mp_cijena, 2) }} KM |
 @endif
 @endcomponent
 

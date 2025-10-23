@@ -80,8 +80,8 @@ interface Tire {
     sirina?: string;
     visina?: string;
     eprel_code?: string;
-    veleprodajna_cijena?: number;
-    maloprodajna_cijena?: number;
+    vp_cijena?: number;
+    mp_cijena?: number;
     nabavna_cijena?: number;
     kolicina_na_stanju: number;
     sezona?: string;
@@ -265,12 +265,12 @@ const createAdminTireColumns = (
 
         },
         {
-            accessorKey: "veleprodajna_cijena",
+            accessorKey: "vp_cijena",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="VP Cijena" />
             ),
             cell: ({ row }) => {
-                const price = row.getValue("veleprodajna_cijena") as number;
+                const price = row.getValue("vp_cijena") as number;
                 if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
                 return (
                     <div className="font-medium">
@@ -281,12 +281,12 @@ const createAdminTireColumns = (
 
         },
         {
-            accessorKey: "maloprodajna_cijena",
+            accessorKey: "mp_cijena",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="MP Cijena" />
             ),
             cell: ({ row }) => {
-                const price = row.getValue("maloprodajna_cijena") as number;
+                const price = row.getValue("mp_cijena") as number;
                 if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
                 return (
                     <div className="font-medium">
@@ -869,10 +869,19 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
     };
 
     const handleDiscountFormChange = (field: keyof DiscountFormData, value: string) => {
-        setDiscountFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        setDiscountFormData(prev => {
+            const updated = {
+                ...prev,
+                [field]: value
+            };
+
+            // Clear user_id when scope changes to app_wide
+            if (field === 'scope' && value === 'app_wide') {
+                updated.user_id = '';
+            }
+
+            return updated;
+        });
     };
 
     const handleDiscountSubmit = async (e: React.FormEvent) => {
