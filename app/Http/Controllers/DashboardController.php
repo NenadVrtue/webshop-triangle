@@ -43,7 +43,7 @@ class DashboardController extends Controller
         }
 
         // Get all tires with proper data mapping for DataTable
-        $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'is_active', 'created_at', 'updated_at')
+        $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'image_url', 'is_active', 'created_at', 'updated_at')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($tire) use ($userDiscounts) {
@@ -59,6 +59,7 @@ class DashboardController extends Controller
                     'sirina' => $tire->sirina,
                     'visina' => $tire->visina,
                     'eprel_code' => $tire->eprel_code,
+                    'image_url' => $tire->image_url,
                     'vp_cijena' => $originalPrice,
                     'mp_cijena' => (float) ($tire->mp_cijena ?? 0),
                     'discount_percentage' => $discountPercentage,

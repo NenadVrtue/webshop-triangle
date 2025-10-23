@@ -89,7 +89,7 @@ class DashboardController extends Controller
             });
 
         // Get all tires
-        $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'is_active', 'created_at', 'updated_at')
+        $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'image_url', 'is_active', 'created_at', 'updated_at')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($tire) {
@@ -101,6 +101,7 @@ class DashboardController extends Controller
                     'sirina' => $tire->sirina,
                     'visina' => $tire->visina,
                     'eprel_code' => $tire->eprel_code,
+                    'image_url' => $tire->image_url,
                     'vp_cijena' => (float) ($tire->vp_cijena ?? 0),
                     'mp_cijena' => (float) ($tire->mp_cijena ?? 0),
                     'kolicina_na_stanju' => (int) $tire->kolicina_na_stanju,

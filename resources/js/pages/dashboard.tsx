@@ -11,7 +11,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatCurrency } from '@/lib/utils';
 import { useCartContext } from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
-import { ShoppingCart, MessageCircle } from 'lucide-react';
+import { ShoppingCart, MessageCircle, ImageOff } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Tire {
     id: number;
@@ -74,6 +75,66 @@ export function ExpandableImeCell({ naziv }: { naziv: string }) {
     );
 }
 
+// Tire image dialog component
+function TireImageDialog({ tire }: { tire: Tire }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [imageError, setImageError] = useState(false);
+
+    // Use image_url from database if available, otherwise fallback to pattern
+    const imageUrl = tire.image_url || `https://www.triangle-gume.com/wp-content/uploads/tires/${tire.sifra}.jpg`;
+
+    const handleImageError = () => {
+        setImageError(true);
+    };
+
+    return (
+        <>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(true)}
+                className="h-10 w-10 p-0 hover:bg-accent"
+                title="Prikaži sliku"
+            >
+                {!imageError ? (
+                    <img
+                        src={imageUrl}
+                        alt={tire.ime}
+                        className="h-10 w-10 object-cover rounded"
+                        onError={handleImageError}
+                    />
+                ) : (
+                    <ImageOff className="h-5 w-5 text-muted-foreground" />
+                )}
+            </Button>
+
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{tire.ime}</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center p-4">
+                        {!imageError ? (
+                            <img
+                                src={imageUrl}
+                                alt={tire.ime}
+                                className="max-w-full h-auto max-h-[400px] object-contain rounded-lg"
+                                onError={handleImageError}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
+                                <ImageOff className="h-16 w-16 mb-4" />
+                                <p className="text-sm">Slika nije dostupna</p>
+                                <p className="text-xs mt-2">Šifra: {tire.sifra}</p>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}
+
 const createUserTireColumns = (
     onAddToCart: (tire: Tire) => void
 ): ColumnDef<Tire>[] => [
@@ -88,6 +149,14 @@ const createUserTireColumns = (
             cell: ({ row }) => (
 
                 <ExpandableImeCell naziv={row.getValue("ime") as string} />
+            ),
+        },
+        {
+            id: "slika",
+            header: "Slika",
+            enableHiding: false,
+            cell: ({ row }) => (
+                <TireImageDialog tire={row.original} />
             ),
         },
         {
