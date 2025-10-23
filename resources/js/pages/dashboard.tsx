@@ -21,6 +21,7 @@ interface Tire {
     sirina?: string;
     visina?: string;
     eprel_code?: string;
+    image_url?: string;
     vp_cijena?: number;
     mp_cijena?: number;
     nabavna_cijena?: number;
