@@ -51,8 +51,8 @@ export interface Tire {
     sirina?: string;
     visina?: string;
     eprel_code?: string;
-    veleprodajna_cijena?: number;
-    maloprodajna_cijena?: number;
+    vp_cijena?: number;
+    mp_cijena?: number;
     nabavna_cijena?: number;
     discount_percentage?: number;
     discounted_price?: number;

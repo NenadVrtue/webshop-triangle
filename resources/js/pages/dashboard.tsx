@@ -21,8 +21,8 @@ interface Tire {
     sirina?: string;
     visina?: string;
     eprel_code?: string;
-    veleprodajna_cijena?: number;
-    maloprodajna_cijena?: number;
+    vp_cijena?: number;
+    mp_cijena?: number;
     nabavna_cijena?: number;
     discount_percentage?: number;
     discounted_price?: number;
@@ -118,12 +118,12 @@ const createUserTireColumns = (
 
         },
         {
-            accessorKey: "veleprodajna_cijena",
+            accessorKey: "vp_cijena",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="VP Cijena" />
             ),
             cell: ({ row }) => {
-                const price = row.getValue("veleprodajna_cijena") as number;
+                const price = row.getValue("vp_cijena") as number;
                 const discountPercentage = row.original.discount_percentage || 0;
                 const discountedPrice = row.original.discounted_price || price;
 
@@ -154,12 +154,12 @@ const createUserTireColumns = (
 
         },
         {
-            accessorKey: "maloprodajna_cijena",
+            accessorKey: "mp_cijena",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="MP Cijena" />
             ),
             cell: ({ row }) => {
-                const price = row.getValue("maloprodajna_cijena") as number;
+                const price = row.getValue("mp_cijena") as number;
                 if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
                 return (
                     <div className="font-medium">

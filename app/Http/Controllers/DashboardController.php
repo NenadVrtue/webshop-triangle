@@ -43,32 +43,32 @@ class DashboardController extends Controller
         }
 
         // Get all tires with proper data mapping for DataTable
-        $tires = Tire::select('id', 'sifra', 'naziv', 'veleprodajna_cijena', 'maloprodajna_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'is_active', 'created_at', 'updated_at')
+        $tires = Tire::select('id', 'sifra', 'ime', 'vp_cijena', 'mp_cijena', 'dimenzije', 'sirina', 'visina', 'kolicina_na_stanju', 'kategorija', 'sezona', 'eprel_code', 'is_active', 'created_at', 'updated_at')
             ->orderBy('created_at', 'desc')
             ->get()
             ->map(function ($tire) use ($userDiscounts) {
                 $discountPercentage = $userDiscounts[$tire->kategorija] ?? 0;
-                $originalPrice = (float) ($tire->veleprodajna_cijena ?? 0);
+                $originalPrice = (float) ($tire->vp_cijena ?? 0);
                 $discountedPrice = $originalPrice * (1 - $discountPercentage / 100);
 
                 return [
                     'id' => $tire->id,
                     'sifra' => $tire->sifra,
-                    'ime' => $tire->naziv, // Map naziv to ime for frontend compatibility
+                    'ime' => $tire->ime,
                     'dimenzije' => $tire->dimenzije,
                     'sirina' => $tire->sirina,
                     'visina' => $tire->visina,
                     'eprel_code' => $tire->eprel_code,
-                    'veleprodajna_cijena' => $originalPrice,
-                    'maloprodajna_cijena' => (float) ($tire->maloprodajna_cijena ?? 0),
+                    'vp_cijena' => $originalPrice,
+                    'mp_cijena' => (float) ($tire->mp_cijena ?? 0),
                     'discount_percentage' => $discountPercentage,
                     'discounted_price' => $discountedPrice,
                     'kolicina_na_stanju' => (int) $tire->kolicina_na_stanju,
                     'sezona' => $tire->sezona,
                     'kategorija' => $tire->kategorija,
                     'is_active' => (bool) $tire->is_active,
-                    'created_at' => $tire->created_at->format('d.m.Y H:i'),
-                    'updated_at' => $tire->updated_at->format('d.m.Y H:i'),
+                    'created_at' => $tire->created_at ? $tire->created_at->format('d.m.Y H:i') : null,
+                    'updated_at' => $tire->updated_at ? $tire->updated_at->format('d.m.Y H:i') : null,
                 ];
             });
 

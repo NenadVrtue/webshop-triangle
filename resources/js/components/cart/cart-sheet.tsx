@@ -44,12 +44,12 @@ export function CartSheet({
 
     // Calculate subtotal and discount
     const cartSubtotal = cart.reduce((sum, item) => {
-        const itemPrice = item.tire.veleprodajna_cijena || 0;
+        const itemPrice = item.tire.vp_cijena || 0;
         return sum + (itemPrice * item.quantity);
     }, 0);
 
     const cartDiscount = cart.reduce((sum, item) => {
-        const itemPrice = item.tire.veleprodajna_cijena || 0;
+        const itemPrice = item.tire.vp_cijena || 0;
         const discountPercentage = item.tire.discount_percentage || 0;
         const discountAmount = (itemPrice * discountPercentage / 100) * item.quantity;
         return sum + discountAmount;
@@ -146,7 +146,7 @@ export function CartSheet({
                                 <div className="space-y-4 ">
                                     {cart.map((item) => {
 
-                                        const totalItemPrice = (item.tire.veleprodajna_cijena ?? 0) * item.quantity;
+                                        const totalItemPrice = (item.tire.vp_cijena ?? 0) * item.quantity;
 
                                         return (
                                             <div
@@ -216,7 +216,7 @@ export function CartSheet({
                                                         {item.tire.discount_percentage && item.tire.discount_percentage > 0 ? (
                                                             <>
                                                                 <p className="text-sm line-through text-muted-foreground">
-                                                                    {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena.toFixed(2)} KM` : 'N/A'}
+                                                                    {item.tire.vp_cijena ? `${item.tire.vp_cijena.toFixed(2)} KM` : 'N/A'}
                                                                 </p>
                                                                 <p className="text-green-600 font-medium text-sm">
                                                                     {item.tire.discounted_price ? `${item.tire.discounted_price.toFixed(2)} KM` : 'N/A'}
@@ -231,7 +231,7 @@ export function CartSheet({
                                                         ) : (
                                                             <>
                                                                 <p className="text-gray-600 dark:text-foreground text-sm">
-                                                                    Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena.toFixed(2)} KM` : 'N/A'}
+                                                                    Cijena: {item.tire.vp_cijena ? `${item.tire.vp_cijena.toFixed(2)} KM` : 'N/A'}
                                                                 </p>
                                                                 <p className="font-medium dark:text-secondary text-primary text-lg">
                                                                     Ukupno: {totalItemPrice.toFixed(2)} KM

@@ -16,8 +16,8 @@ interface Tire {
     sirina?: string;
     visina?: string;
     eprel_code?: string;
-    veleprodajna_cijena?: number;
-    maloprodajna_cijena?: number;
+    vp_cijena?: number;
+    mp_cijena?: number;
     kolicina_na_stanju: number;
     sezona?: string;
     is_active: boolean;

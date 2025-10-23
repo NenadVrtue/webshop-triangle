@@ -31,8 +31,8 @@ interface Tire {
     eprel_code?: string;
     is_active: boolean;
     // Only show customer-facing prices
-    maloprodajna_cijena?: number;
-    veleprodajna_cijena?: number;
+    mp_cijena?: number;
+
     // Technical specifications
     load_speedindex?: string;
     dot?: string;
