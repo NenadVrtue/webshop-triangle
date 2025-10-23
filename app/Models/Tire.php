@@ -46,6 +46,7 @@ class Tire extends Model
         'xl',
         'rim',
         'eprel_code',
+        'image_url',
         'pritisak_duvanja',
         'dubina_gaznog_sloja',
         'sirina_gaznog_sloja',

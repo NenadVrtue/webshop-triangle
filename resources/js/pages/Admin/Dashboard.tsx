@@ -241,6 +241,14 @@ const createAdminTireColumns = (
             ),
         },
         {
+            id: "slika",
+            header: "Slika",
+            enableHiding: false,
+            cell: ({ row }) => (
+                <TireImageDialog tire={row.original} />
+            ),
+        },
+        {
             accessorKey: "kolicina_na_stanju",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Količina na stanju" />

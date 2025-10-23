@@ -14,6 +14,11 @@ class TireResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        $data = parent::toArray($request);
+        
+        // Ensure image_url is included
+        $data['image_url'] = $this->image_url;
+        
+        return $data;
     }
 }
