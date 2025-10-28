@@ -25,12 +25,10 @@ class SyncTiresToWoo implements ShouldQueue
             foreach ($tires as $tire) {
                 // Napravi payload mapiran iz tvoje tabele
                 $payload = [
-                    'name' => $tire->ime,
                     'sku' => $tire->sifra,
                     'regular_price' => $tire->mp_cijena !== null ? (string) $tire->mp_cijena : null,
                     'manage_stock' => true,
                     'stock_quantity' => (int) $tire->kolicina_na_stanju,
-                    'status' => $tire->is_active ? 'publish' : 'draft',
                     'meta_data' => [
                         ['key' => 'vp_cijena', 'value' => $tire->vp_cijena],
                         ['key' => 'sirina', 'value' => $tire->sirina],
@@ -47,7 +45,7 @@ class SyncTiresToWoo implements ShouldQueue
                         $woo->updateProduct((int)$existing['id'], $payload);
                         $status = 'updated';
                         $this->counter++;
-                        echo $this->counter . $status . "\n";
+#                        echo $this->counter . $status . "\n";
                     } else {
                         $woo->createProduct($payload);
                         $status = 'created';
