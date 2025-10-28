@@ -11,7 +11,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { formatCurrency } from '@/lib/utils';
 import { useCartContext } from '@/layouts/app/app-sidebar-layout';
 import { type BreadcrumbItem } from '@/types';
-import { ShoppingCart, MessageCircle } from 'lucide-react';
+import { ShoppingCart, MessageCircle, ImageOff } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Tire {
     id: number;
@@ -21,9 +22,12 @@ interface Tire {
     sirina?: string;
     visina?: string;
     eprel_code?: string;
-    veleprodajna_cijena?: number;
-    maloprodajna_cijena?: number;
+    image_url?: string;
+    vp_cijena?: number;
+    mp_cijena?: number;
     nabavna_cijena?: number;
+    discount_percentage?: number;
+    discounted_price?: number;
     kolicina_na_stanju: number;
     sezona?: string;
     is_active: boolean;
@@ -71,6 +75,66 @@ export function ExpandableImeCell({ naziv }: { naziv: string }) {
     );
 }
 
+// Tire image dialog component
+function TireImageDialog({ tire }: { tire: Tire }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [imageError, setImageError] = useState(false);
+
+    // Use image_url from database if available, otherwise fallback to pattern
+    const imageUrl = tire.image_url || `https://www.triangle-gume.com/wp-content/uploads/tires/${tire.sifra}.jpg`;
+
+    const handleImageError = () => {
+        setImageError(true);
+    };
+
+    return (
+        <>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(true)}
+                className="h-10 w-10 p-0 hover:bg-accent"
+                title="Prikaži sliku"
+            >
+                {!imageError ? (
+                    <img
+                        src={imageUrl}
+                        alt={tire.ime}
+                        className="h-10 w-10 object-cover rounded"
+                        onError={handleImageError}
+                    />
+                ) : (
+                    <ImageOff className="h-5 w-5 text-muted-foreground" />
+                )}
+            </Button>
+
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{tire.ime}</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center p-4">
+                        {!imageError ? (
+                            <img
+                                src={imageUrl}
+                                alt={tire.ime}
+                                className="max-w-full h-auto max-h-[400px] object-contain rounded-lg"
+                                onError={handleImageError}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
+                                <ImageOff className="h-16 w-16 mb-4" />
+                                <p className="text-sm">Slika nije dostupna</p>
+                                <p className="text-xs mt-2">Šifra: {tire.sifra}</p>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}
+
 const createUserTireColumns = (
     onAddToCart: (tire: Tire) => void
 ): ColumnDef<Tire>[] => [
@@ -85,6 +149,14 @@ const createUserTireColumns = (
             cell: ({ row }) => (
 
                 <ExpandableImeCell naziv={row.getValue("ime") as string} />
+            ),
+        },
+        {
+            id: "slika",
+            header: "Slika",
+            enableHiding: false,
+            cell: ({ row }) => (
+                <TireImageDialog tire={row.original} />
             ),
         },
         {
@@ -116,28 +188,48 @@ const createUserTireColumns = (
 
         },
         {
-            accessorKey: "veleprodajna_cijena",
+            accessorKey: "vp_cijena",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="VP Cijena" />
             ),
             cell: ({ row }) => {
-                const price = row.getValue("veleprodajna_cijena") as number;
+                const price = row.getValue("vp_cijena") as number;
+                const discountPercentage = row.original.discount_percentage || 0;
+                const discountedPrice = row.original.discounted_price || price;
+
                 if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
+
                 return (
-                    <div className="font-medium">
-                        {price} KM
+                    <div>
+                        {discountPercentage > 0 ? (
+                            <div>
+                                <div className="text-sm line-through text-muted-foreground">
+                                    {price.toFixed(2)} KM
+                                </div>
+                                <div className="font-bold text-green-600">
+                                    {discountedPrice.toFixed(2)} KM
+                                </div>
+                                <Badge variant="secondary" className="text-xs mt-1">
+                                    -{discountPercentage}%
+                                </Badge>
+                            </div>
+                        ) : (
+                            <div className="font-medium">
+                                {price.toFixed(2)} KM
+                            </div>
+                        )}
                     </div>
                 );
             },
 
         },
         {
-            accessorKey: "maloprodajna_cijena",
+            accessorKey: "mp_cijena",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="MP Cijena" />
             ),
             cell: ({ row }) => {
-                const price = row.getValue("maloprodajna_cijena") as number;
+                const price = row.getValue("mp_cijena") as number;
                 if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
                 return (
                     <div className="font-medium">

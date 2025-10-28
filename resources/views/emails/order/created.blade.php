@@ -45,11 +45,18 @@ Primili smo novu narudžbu od kupca **{{ $order->customer_name }}**.
 
 ## Ukupno
 
+@component('mail::panel')
 **Subtotal:** {{ number_format($order->subtotal, 2) }} KM  
 @if($order->discount_amount > 0)
 **Popust:** -{{ number_format($order->discount_amount, 2) }} KM  
+---  
 @endif
-**Ukupno:** {{ number_format($order->total, 2) }} KM
+**Ukupno za plaćanje:** {{ number_format($order->total, 2) }} KM
+@if($order->discount_amount > 0)
+
+_Ušteda: {{ number_format($order->discount_amount, 2) }} KM_
+@endif
+@endcomponent
 
 @if($order->notes)
 ## Napomene

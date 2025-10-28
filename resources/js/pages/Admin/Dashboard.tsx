@@ -33,7 +33,8 @@ import {
     Plus,
     UserMinus,
     Percent,
-    Tag
+    Tag,
+    ImageOff
 } from 'lucide-react';
 
 interface User {
@@ -80,8 +81,9 @@ interface Tire {
     sirina?: string;
     visina?: string;
     eprel_code?: string;
-    veleprodajna_cijena?: number;
-    maloprodajna_cijena?: number;
+    image_url?: string;
+    vp_cijena?: number;
+    mp_cijena?: number;
     nabavna_cijena?: number;
     kolicina_na_stanju: number;
     sezona?: string;
@@ -101,6 +103,20 @@ interface PromoCode {
     created_at: string;
 }
 
+interface Discount {
+    id: number;
+    scope: 'app_wide' | 'per_user';
+    user_id: number | null;
+    user: {
+        id: number;
+        full_name: string;
+        company_name?: string;
+    } | null;
+    tire_kategorija: string;
+    percentage: number;
+    created_at: string;
+}
+
 interface Stats {
     total_users: number;
     active_users: number;
@@ -114,6 +130,7 @@ interface Props {
     orders: Order[];
     tires: Tire[];
     promoCodes: PromoCode[];
+    discounts: Discount[];
     stats: Stats;
     filters?: {
         status?: string;
@@ -138,6 +155,12 @@ interface PromoCodeFormData {
     code: string;
     discount: string;
     expires_at: string;
+}
+interface DiscountFormData {
+    scope: 'app_wide' | 'per_user';
+    user_id: string;
+    tire_kategorija: string;
+    percentage: string;
 }
 
 const getStatusBadgeVariant = (status: string) => {
@@ -169,6 +192,67 @@ const formatDate = (dateString: string) => {
         minute: '2-digit'
     });
 };
+
+// Tire image dialog component for Admin
+function TireImageDialog({ tire }: { tire: Tire }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const [imageError, setImageError] = useState(false);
+
+    // Use image_url from database if available, otherwise fallback to pattern
+    const imageUrl = tire.image_url || `https://www.triangle-gume.com/wp-content/uploads/tires/${tire.sifra}.jpg`;
+
+    const handleImageError = () => {
+        setImageError(true);
+    };
+
+    return (
+        <>
+            <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOpen(true)}
+                className="h-10 w-10 p-0 hover:bg-accent"
+                title="Prikaži sliku"
+            >
+                {!imageError ? (
+                    <img
+                        src={imageUrl}
+                        alt={tire.ime}
+                        className="h-10 w-10 object-cover rounded"
+                        onError={handleImageError}
+                    />
+                ) : (
+                    <ImageOff className="h-5 w-5 text-muted-foreground" />
+                )}
+            </Button>
+
+            <Dialog open={isOpen} onOpenChange={setIsOpen}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{tire.ime}</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex items-center justify-center p-4">
+                        {!imageError ? (
+                            <img
+                                src={imageUrl}
+                                alt={tire.ime}
+                                className="max-w-full h-auto max-h-[400px] object-contain rounded-lg"
+                                onError={handleImageError}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center p-8 text-muted-foreground">
+                                <ImageOff className="h-16 w-16 mb-4" />
+                                <p className="text-sm">Slika nije dostupna</p>
+                                <p className="text-xs mt-2">Šifra: {tire.sifra}</p>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </>
+    );
+}
+
 export function ExpandableImeCell({ naziv }: { naziv: string }) {
     const [isExpanded, setIsExpanded] = useState(false);
 
@@ -220,6 +304,14 @@ const createAdminTireColumns = (
             ),
         },
         {
+            id: "slika",
+            header: "Slika",
+            enableHiding: false,
+            cell: ({ row }) => (
+                <TireImageDialog tire={row.original} />
+            ),
+        },
+        {
             accessorKey: "kolicina_na_stanju",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="Količina na stanju" />
@@ -236,12 +328,12 @@ const createAdminTireColumns = (
 
         },
         {
-            accessorKey: "veleprodajna_cijena",
+            accessorKey: "vp_cijena",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="VP Cijena" />
             ),
             cell: ({ row }) => {
-                const price = row.getValue("veleprodajna_cijena") as number;
+                const price = row.getValue("vp_cijena") as number;
                 if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
                 return (
                     <div className="font-medium">
@@ -252,12 +344,12 @@ const createAdminTireColumns = (
 
         },
         {
-            accessorKey: "maloprodajna_cijena",
+            accessorKey: "mp_cijena",
             header: ({ column }) => (
                 <DataTableColumnHeader column={column} title="MP Cijena" />
             ),
             cell: ({ row }) => {
-                const price = row.getValue("maloprodajna_cijena") as number;
+                const price = row.getValue("mp_cijena") as number;
                 if (!price) return <span className="text-muted-foreground">Trenutno Nedostupna</span>;
                 return (
                     <div className="font-medium">
@@ -429,7 +521,7 @@ const createAdminPromoCodeColumns = (
         },
     ];
 
-export default function AdminDashboard({ users, orders, tires = [], promoCodes = [], stats, filters = {} }: Props) {
+export default function AdminDashboard({ users, orders, tires = [], promoCodes = [], stats, discounts = [], filters = {} }: Props) {
     const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
     const [updatingTire, setUpdatingTire] = useState<number | null>(null);
     const [showFilters, setShowFilters] = useState(false);
@@ -465,6 +557,18 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
         expires_at: '',
     });
 
+    // Discount management state
+    const [showDiscountModal, setShowDiscountModal] = useState(false);
+    const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
+    const [showDeleteDiscountDialog, setShowDeleteDiscountDialog] = useState(false);
+    const [discountToDelete, setDiscountToDelete] = useState<Discount | null>(null);
+    const [discountFormData, setDiscountFormData] = useState<DiscountFormData>({
+        scope: 'per_user',
+        user_id: '',
+        tire_kategorija: '',
+        percentage: '',
+    });
+
     const roleOptions = [
         { value: 0, label: 'Korisnik' },
         { value: 1, label: 'Administrator' },
@@ -484,6 +588,7 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
             setUpdatingStatus(null);
         }
     };
+
 
     const handleToggleActive = async (tireId: number, currentStatus: boolean) => {
         setUpdatingTire(tireId);
@@ -782,6 +887,120 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
             toast.error('Došlo je do greške');
         }
     };
+    // Discount handlers
+    const handleEditDiscount = (discount: Discount) => {
+        setEditingDiscount(discount);
+        setDiscountFormData({
+            scope: discount.scope,
+            user_id: discount.user_id?.toString() || '',
+            tire_kategorija: discount.tire_kategorija,
+            percentage: discount.percentage.toString(),
+        });
+        setShowDiscountModal(true);
+    };
+
+    const openCreateDiscountModal = () => {
+        setEditingDiscount(null);
+        setDiscountFormData({
+            scope: 'per_user',
+            user_id: '',
+            tire_kategorija: '',
+            percentage: '',
+        });
+        setShowDiscountModal(true);
+    };
+
+    const handleDeleteDiscount = (discount: Discount) => {
+        setDiscountToDelete(discount);
+        setShowDeleteDiscountDialog(true);
+    };
+
+    const confirmDeleteDiscount = () => {
+        if (discountToDelete) {
+            router.delete(`/discounts/${discountToDelete.id}`, {
+                onSuccess: () => {
+                    toast.success('Popust je uspešno obrisan');
+                    setShowDeleteDiscountDialog(false);
+                    setDiscountToDelete(null);
+                },
+                onError: (error) => {
+                    console.error('Delete error:', error);
+                    toast.error('Greška pri brisanju popusta');
+                }
+            });
+        }
+    };
+
+    const handleDiscountFormChange = (field: keyof DiscountFormData, value: string) => {
+        setDiscountFormData(prev => {
+            const updated = {
+                ...prev,
+                [field]: value
+            };
+
+            // Clear user_id when scope changes to app_wide
+            if (field === 'scope' && value === 'app_wide') {
+                updated.user_id = '';
+            }
+
+            return updated;
+        });
+    };
+
+    const handleDiscountSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        try {
+            const submitData = {
+                scope: discountFormData.scope,
+                user_id: discountFormData.scope === 'per_user' ? parseInt(discountFormData.user_id) : null,
+                tire_kategorija: discountFormData.tire_kategorija,
+                percentage: parseFloat(discountFormData.percentage)
+            };
+
+            if (editingDiscount) {
+                router.patch(`/discounts/${editingDiscount.id}`, submitData, {
+                    onSuccess: () => {
+                        toast.success('Popust je uspešno ažuriran');
+                        setShowDiscountModal(false);
+                    },
+                    onError: (errors) => {
+                        console.error('Validation errors:', errors);
+                        Object.entries(errors).forEach(([field, messages]) => {
+                            if (Array.isArray(messages)) {
+                                messages.forEach(message => toast.error(`${field}: ${message}`));
+                            } else {
+                                toast.error(`${field}: ${messages}`);
+                            }
+                        });
+                    }
+                });
+            } else {
+                router.post('/discounts', submitData, {
+                    onSuccess: () => {
+                        toast.success('Popust je uspešno kreiran');
+                        setShowDiscountModal(false);
+                    },
+                    onError: (errors) => {
+                        console.error('Validation errors:', errors);
+                        Object.entries(errors).forEach(([field, messages]) => {
+                            if (Array.isArray(messages)) {
+                                messages.forEach(message => toast.error(`${field}: ${message}`));
+                            } else {
+                                toast.error(`${field}: ${messages}`);
+                            }
+                        });
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error submitting discount:', error);
+            toast.error('Došlo je do greške');
+        }
+    };
+
+    // Get unique tire categories for dropdown
+    const tireKategorije = Array.from(new Set(tires.map(t => t.kategorija).filter(Boolean)));
 
     const statusOptions = [
         { value: 'all', label: 'Svi statusi' },
@@ -1059,6 +1278,101 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
                         </div>
                     </CardContent>
                 </Card> */}
+
+                {/* Discount Management Section */}
+                <Card>
+                    <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Percent className="h-5 w-5" />
+                                    Upravljanje popustima
+                                </CardTitle>
+                                <CardDescription>
+                                    Pregled i upravljanje popustima po kategorijama guma
+                                </CardDescription>
+                            </div>
+                            <Button onClick={openCreateDiscountModal} className="flex items-center gap-2">
+                                <Plus className="h-4 w-4" />
+                                Dodaj popust
+                            </Button>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="rounded-md border">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Tip</TableHead>
+                                        <TableHead>Korisnik</TableHead>
+                                        <TableHead>Kategorija</TableHead>
+                                        <TableHead>Procenat</TableHead>
+                                        <TableHead>Akcije</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {discounts.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                                                Nema popusta
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        discounts.map((discount) => (
+                                            <TableRow key={discount.id}>
+                                                <TableCell>
+                                                    <Badge variant={discount.scope === 'app_wide' ? 'default' : 'secondary'}>
+                                                        {discount.scope === 'app_wide' ? 'Globalni' : 'Po korisniku'}
+                                                    </Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {discount.user ? (
+                                                        <div>
+                                                            <div className="font-medium">{discount.user.full_name}</div>
+                                                            {discount.user.company_name && (
+                                                                <div className="text-sm text-muted-foreground">
+                                                                    {discount.user.company_name}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-muted-foreground">Svi korisnici</span>
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Badge variant="outline">{discount.tire_kategorija}</Badge>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <span className="font-semibold text-green-600">
+                                                        {discount.percentage}%
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="flex space-x-2">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleEditDiscount(discount)}
+                                                        >
+                                                            <Edit className="w-4 h-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => handleDeleteDiscount(discount)}
+                                                        >
+                                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                                        </Button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 {/* Orders Table */}
                 <Card>
@@ -1513,6 +1827,151 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
                         <Button
                             type="button"
                             onClick={confirmDeleteUser}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Obriši
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Discount Create/Edit Modal */}
+            <Dialog open={showDiscountModal} onOpenChange={setShowDiscountModal}>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {editingDiscount ? 'Uredi popust' : 'Dodaj novi popust'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {editingDiscount
+                                ? 'Ažuriraj informacije o popustu'
+                                : 'Unesite informacije za novi popust'
+                            }
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <form onSubmit={handleDiscountSubmit} className="space-y-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="scope">Tip popusta *</Label>
+                            <Select
+                                value={discountFormData.scope}
+                                onValueChange={(value) => handleDiscountFormChange('scope', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Izaberite tip popusta" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="app_wide">Globalni (svi korisnici)</SelectItem>
+                                    <SelectItem value="per_user">Po korisniku</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        {discountFormData.scope === 'per_user' && (
+                            <div className="space-y-2">
+                                <Label htmlFor="user_id">Korisnik *</Label>
+                                <Select
+                                    value={discountFormData.user_id}
+                                    onValueChange={(value) => handleDiscountFormChange('user_id', value)}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Izaberite korisnika" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {users.map((user) => (
+                                            <SelectItem key={user.id} value={user.id.toString()}>
+                                                {user.full_name} {user.company_name ? `(${user.company_name})` : ''}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
+
+                        <div className="space-y-2">
+                            <Label htmlFor="tire_kategorija">Kategorija guma *</Label>
+                            <Select
+                                value={discountFormData.tire_kategorija}
+                                onValueChange={(value) => handleDiscountFormChange('tire_kategorija', value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Izaberite kategoriju" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tireKategorije.map((kategorija) => (
+                                        <SelectItem key={kategorija} value={kategorija as string}>
+                                            {kategorija}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="percentage">Procenat popusta (%) *</Label>
+                            <Input
+                                id="percentage"
+                                type="number"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                value={discountFormData.percentage}
+                                onChange={(e) => handleDiscountFormChange('percentage', e.target.value)}
+                                required
+                                placeholder="npr. 10.5"
+                            />
+                        </div>
+
+                        <DialogFooter>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setShowDiscountModal(false)}
+                            >
+                                Otkaži
+                            </Button>
+                            <Button type="submit">
+                                {editingDiscount ? 'Ažuriraj' : 'Kreiraj'}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
+
+            {/* Discount Delete Confirmation Dialog */}
+            <Dialog open={showDeleteDiscountDialog} onOpenChange={setShowDeleteDiscountDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Potvrda brisanja</DialogTitle>
+                        <DialogDescription>
+                            Da li ste sigurni da želite da obrišete ovaj popust?
+                            {discountToDelete && (
+                                <div className="mt-2 p-3 bg-muted rounded-md">
+                                    <div><strong>Tip:</strong> {discountToDelete.scope === 'app_wide' ? 'Globalni' : 'Po korisniku'}</div>
+                                    {discountToDelete.user && (
+                                        <div><strong>Korisnik:</strong> {discountToDelete.user.full_name}</div>
+                                    )}
+                                    <div><strong>Kategorija:</strong> {discountToDelete.tire_kategorija}</div>
+                                    <div><strong>Procenat:</strong> {discountToDelete.percentage}%</div>
+                                </div>
+                            )}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="flex gap-2">
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => {
+                                setShowDeleteDiscountDialog(false);
+                                setDiscountToDelete(null);
+                            }}
+                        >
+                            Otkaži
+                        </Button>
+                        <Button
+                            type="button"
+                            onClick={confirmDeleteDiscount}
                             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
                             <Trash2 className="h-4 w-4 mr-1" />

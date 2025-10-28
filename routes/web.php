@@ -1,19 +1,18 @@
 <?php
 
-use App\Http\Controllers\Api\UserController;
-use App\Http\Controllers\DiscountController;
-use App\Http\Controllers\PromoCodeController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Api\TireController;
-use App\Models\Discount;
-use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\RegisteredUserController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\OrderController;
-use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
-use App\Http\Controllers\Sales\DashboardController as SalesDashboardController;
 use App\Http\Controllers\ContactInquiryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PromoCodeController;
+use App\Http\Controllers\Sales\DashboardController as SalesDashboardController;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -32,7 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}/success', [OrderController::class, 'success'])->name('orders.success');
-    
+
     // Contact inquiry route
     Route::post('/contact-inquiry', [ContactInquiryController::class, 'store'])->name('contact-inquiry.store');
 });
@@ -63,7 +62,9 @@ Route::middleware(['auth', 'verified', 'role:admin'])->group(function () {
     Route::delete('/promocodes/{promoCode}', [PromoCodeController::class, 'destroy'])->name('promocodes.destroy');
     Route::get('/discounts', [DiscountController::class, 'index'])->name('discounts.index');
     Route::post('/discounts', [DiscountController::class, 'store'])->name('discounts.store');
-    
+    Route::patch('/discounts/{discount}', [DiscountController::class, 'update'])->name('discounts.update');
+    Route::delete('/discounts/{discount}', [DiscountController::class, 'destroy'])->name('discounts.destroy');
+
     // Tire management routes
     Route::patch('/admin/tires/{tire}', [TireController::class, 'update'])->name('admin.tires.update');
 });

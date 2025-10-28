@@ -10,16 +10,18 @@ return new class extends Migration
     {
         Schema::table('tires', function (Blueprint $table) {
             $table->decimal('nabavna_cijena', 10, 2)->nullable()->after('is_active');
-            $table->decimal('maloprodajna_cijena', 10, 2)->nullable()->after('nabavna_cijena');
-            $table->decimal('veleprodajna_cijena', 10, 2)->nullable()->after('maloprodajna_cijena');
+            $table->decimal('mp_cijena', 10, 2)->nullable()->after('nabavna_cijena');
+            $table->decimal('vp_cijena', 10, 2)->nullable()->after('mp_cijena');
+            $table->integer('kolicina_na_stanju')->default(0)->after('vp_cijena');
+            $table->string('kategorija')->nullable()->after('kolicina_na_stanju');
+            $table->string('sezona')->nullable()->after('kategorija');
         });
     }
 
     public function down(): void
     {
         Schema::table('tires', function (Blueprint $table) {
-            $table->dropColumn(['nabavna_cijena', 'maloprodajna_cijena', 'veleprodajna_cijena']);
+            $table->dropColumn(['nabavna_cijena', 'mp_cijena', 'vp_cijena', 'kolicina_na_stanju', 'kategorija', 'sezona']);
         });
     }
-
 };

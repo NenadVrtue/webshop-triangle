@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/separator';
 import { Trash2, Plus, Minus } from 'lucide-react';
 import type { CartItem, User } from '@/types';
 import { Link } from '@inertiajs/react';
+import { Badge } from '@/components/ui/badge';
 
 interface CheckoutFormData {
     customer_name: string;
@@ -58,11 +59,19 @@ export default function Checkout() {
 
     // Calculate totals
     const subtotal = cart.reduce((sum, item) => {
-        const price = item.tire.veleprodajna_cijena || 0;
+        const price = item.tire.vp_cijena || 0;
         return sum + (price * item.quantity);
     }, 0);
 
-    const total = subtotal;
+    // Calculate discount based on tire discount percentages
+    const discount = cart.reduce((sum, item) => {
+        const price = item.tire.vp_cijena || 0;
+        const discountPercentage = item.tire.discount_percentage || 0;
+        const discountAmount = (price * discountPercentage / 100) * item.quantity;
+        return sum + discountAmount;
+    }, 0);
+
+    const total = subtotal - discount;
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -330,7 +339,7 @@ export default function Checkout() {
                                     <CardContent>
                                         <div className="space-y-4">
                                             {cart.map((item) => {
-                                                const totalItemPrice = (item.tire.veleprodajna_cijena ?? 0) * item.quantity;
+                                                const totalItemPrice = (item.tire.vp_cijena ?? 0) * item.quantity;
 
                                                 return (
                                                     <div
@@ -400,12 +409,26 @@ export default function Checkout() {
                                                             </div>
 
                                                             <div className="text-right">
-                                                                <p className="text-gray-600 dark:text-foreground text-sm">
-                                                                    Cijena: {item.tire.veleprodajna_cijena ? `${item.tire.veleprodajna_cijena} KM` : 'N/A'}
-                                                                </p>
-                                                                <p className="font-medium dark:text-secondary text-primary text-lg">
-                                                                    Ukupno: {totalItemPrice.toFixed(2)} KM
-                                                                </p>
+                                                                {item.tire.discount_percentage && item.tire.discount_percentage > 0 ? (
+                                                                    <>
+                                                                        <p className="text-sm line-through text-muted-foreground">
+                                                                            {item.tire.vp_cijena ? `${item.tire.vp_cijena.toFixed(2)} KM` : 'N/A'}
+                                                                        </p>
+
+                                                                        <p className="font-medium dark:text-secondary text-primary text-lg">
+                                                                            {((item.tire.discounted_price || 0) * item.quantity).toFixed(2)} KM
+                                                                        </p>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <p className="text-gray-600 dark:text-foreground text-sm">
+                                                                            Cijena: {item.tire.vp_cijena ? `${item.tire.vp_cijena.toFixed(2)} KM` : 'N/A'}
+                                                                        </p>
+                                                                        <p className="font-medium dark:text-secondary text-primary text-lg">
+                                                                            Ukupno: {totalItemPrice.toFixed(2)} KM
+                                                                        </p>
+                                                                    </>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -417,12 +440,19 @@ export default function Checkout() {
 
                                         {/* Totals */}
                                         <div className="space-y-2">
-                                            {/* <div className="flex justify-between">
-                                                <span>Subtotal:</span>
+                                            <div className="flex justify-between">
+                                                <span>Međuzbir:</span>
                                                 <span>{subtotal.toFixed(2)} KM</span>
                                             </div>
 
-                                            <Separator /> */}
+                                            {discount > 0 && (
+                                                <div className="flex justify-between text-green-600">
+                                                    <span>Popust:</span>
+                                                    <span>-{discount.toFixed(2)} KM</span>
+                                                </div>
+                                            )}
+
+                                            <Separator />
 
                                             <div className="flex justify-between text-lg font-bold">
                                                 <span>Ukupno:</span>

@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreOrderRequest;
+use App\Mail\OrderCreated;
 use App\Mail\ToUserOrder;
 use App\Models\Discount;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PromoCode;
 use App\Models\Tire;
-use App\Http\Requests\StoreOrderRequest;
-use App\Http\Resources\OrderResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\OrderCreated;
 use Inertia\Inertia;
 
 class OrderController extends Controller
@@ -21,7 +20,6 @@ class OrderController extends Controller
     {
         return Inertia::render('Checkout');
     }
-
 
     public function store(StoreOrderRequest $request)
     {
@@ -37,7 +35,7 @@ class OrderController extends Controller
         }
 
         // Saberi sve popuste
-        $discountAmount  = $this->applyPromoCodeDiscount($validated, $user);
+        $discountAmount = $this->applyPromoCodeDiscount($validated, $user);
         $discountAmount += $this->applyTireTypeDiscount($validated, $user);
 
         // konačni total
@@ -45,20 +43,20 @@ class OrderController extends Controller
 
         // Kreiraj order
         $order = Order::create([
-            'user_id'         => $user->id,
-            'status'          => 'pending',
-            'customer_name'   => $validated['customer_name'],
-            'customer_email'  => $validated['customer_email'],
-            'customer_phone'  => $validated['customer_phone'] ?? null,
-            'company_name'    => $validated['company_name'] ?? null,
-            'address'         => $validated['address'] ?? null,
-            'city'            => $validated['city'] ?? null,
-            'postal_code'     => $validated['postal_code'] ?? null,
-            'notes'           => $validated['notes'] ?? null,
-            'subtotal'        => $subtotal,
+            'user_id' => $user->id,
+            'status' => 'pending',
+            'customer_name' => $validated['customer_name'],
+            'customer_email' => $validated['customer_email'],
+            'customer_phone' => $validated['customer_phone'] ?? null,
+            'company_name' => $validated['company_name'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'postal_code' => $validated['postal_code'] ?? null,
+            'notes' => $validated['notes'] ?? null,
+            'subtotal' => $subtotal,
             'discount_amount' => $discountAmount,
-            'total'           => $total,
-            'order_date'      => now(),
+            'total' => $total,
+            'order_date' => now(),
         ]);
 
         // Sačuvaj stavke
@@ -68,10 +66,10 @@ class OrderController extends Controller
             $totalPrice = $unitPrice * $item['quantity'];
 
             OrderItem::create([
-                'order_id'    => $order->id,
-                'tire_id'     => $tire->id,
-                'quantity'    => $item['quantity'],
-                'unit_price'  => $unitPrice,
+                'order_id' => $order->id,
+                'tire_id' => $tire->id,
+                'quantity' => $item['quantity'],
+                'unit_price' => $unitPrice,
                 'total_price' => $totalPrice,
             ]);
         }
@@ -81,7 +79,7 @@ class OrderController extends Controller
             Mail::to(config('mail.admin_email', 'nenadvrtue@gmail.com'))->send(new OrderCreated($order));
             Mail::to($order['customer_email'])->send(new ToUserOrder($order));
         } catch (\Exception $e) {
-            \Log::error('Failed to send order email: ' . $e->getMessage());
+            \Log::error('Failed to send order email: '.$e->getMessage());
         }
 
         return redirect()->route('orders.success', $order)->with('success', 'Narudžba je uspješno kreirana!');
@@ -94,11 +92,11 @@ class OrderController extends Controller
     {
         $discount = 0;
 
-        if (!empty($validated['promo_code'])) {
+        if (! empty($validated['promo_code'])) {
             $promo = PromoCode::where('code', $validated['promo_code'])->first();
 
-            if ($promo && !$promo->isExpired()) {
-                if (!$user->promoCodes()->where('promo_code_id', $promo->id)->exists()) {
+            if ($promo && ! $promo->isExpired()) {
+                if (! $user->promoCodes()->where('promo_code_id', $promo->id)->exists()) {
                     $discount += $promo->discount;
                     $user->promoCodes()->attach($promo->id, ['used_at' => now()]);
                 }
@@ -109,7 +107,7 @@ class OrderController extends Controller
     }
 
     /**
-     * Primjena popusta po tipu gume
+     * Primjena popusta po kategoriji gume (app-wide i per-user)
      */
     protected function applyTireTypeDiscount(array $validated, $user): float
     {
@@ -120,12 +118,22 @@ class OrderController extends Controller
             $unitPrice = $tire->vp_cijena ?? 0;
             $lineTotal = $unitPrice * $item['quantity'];
 
-            $discount = Discount::where('user_id', $user->id)
-                ->where('tire_type', $tire->tip)
+            // Prvo proveri per-user popust za ovu kategoriju (higher priority)
+            $perUserDiscount = Discount::perUser()
+                ->where('user_id', $user->id)
+                ->where('tire_kategorija', $tire->kategorija)
                 ->first();
 
-            if ($discount) {
-                $lineDiscount = $lineTotal * ($discount->percentage / 100);
+            // Zatim proveri app-wide popust za ovu kategoriju (lower priority)
+            $appWideDiscount = Discount::appWide()
+                ->where('tire_kategorija', $tire->kategorija)
+                ->first();
+
+            // Per-user discount ALWAYS takes priority over app-wide, regardless of percentage
+            $applicableDiscount = $perUserDiscount ?? $appWideDiscount;
+
+            if ($applicableDiscount) {
+                $lineDiscount = $lineTotal * ($applicableDiscount->percentage / 100);
                 $discountAmount += $lineDiscount;
             }
         }
@@ -133,13 +141,12 @@ class OrderController extends Controller
         return $discountAmount;
     }
 
-
     public function index(Request $request)
     {
         $query = Order::where('user_id', auth()->id());
 
         // Ako je poslan status u query parametru, filtriraj
-        if ($request->filled('status') && in_array($request->status, ['pending','processing','done','cancelled'])) {
+        if ($request->filled('status') && in_array($request->status, ['pending', 'processing', 'done', 'cancelled'])) {
             $query->where('status', $request->status);
         }
 
@@ -164,7 +171,6 @@ class OrderController extends Controller
             ],
         ]);
     }
-
 
     public function success(Order $order)
     {
@@ -197,29 +203,28 @@ class OrderController extends Controller
                         'tire' => $item->tire ? [
                             'id' => $item->tire->id,
                             'sifra' => $item->tire->sifra,
-                            'ime' => $item->tire->ime,
+                            'ime' => $item->tire->ime, // Uses accessor to get naziv
                             'tip' => $item->tire->tip,
                             'dimenzije' => $item->tire->dimenzije,
                             'brend' => $item->tire->brend,
-                            'vp_cijena' => (float) ($item->tire->vp_cijena ?? 0),
-                        ] : null
+                            'vp_cijena' => (float) ($item->tire->vp_cijena ?? 0), // Uses accessor to get veleprodajna_cijena
+                        ] : null,
                     ];
-                })
-            ]
+                }),
+            ],
         ]);
     }
+
     public function updateStatus(Request $request, Order $order)
     {
         $request->validate([
-            'status' => 'required|string|in:pending,processing,done,cancelled'
+            'status' => 'required|string|in:pending,processing,done,cancelled',
         ]);
 
         $order->update([
-            'status' => $request->status
+            'status' => $request->status,
         ]);
 
         return redirect()->back()->with('success', "Status narudžbe je postavljen na {$request->status}.");
     }
-
-
 }

@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('dobavljac')->nullable();
             $table->string('naziv_dobavljaca')->nullable();
             $table->string('bar_kod')->nullable();
-            $table->string('naziv')->nullable();
+            $table->string('ime')->nullable();
             $table->text('kataloski_brojevi')->nullable();
             $table->text('kataloski_broj_2')->nullable();
             $table->text('kataloski_broj_3')->nullable();

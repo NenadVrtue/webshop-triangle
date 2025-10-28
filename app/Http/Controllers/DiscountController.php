@@ -13,55 +13,67 @@ class DiscountController extends Controller
         $discounts = Discount::with('user')->paginate(10);
 
         return inertia('Discounts/Index', [
-            'discounts' => $discounts
+            'discounts' => $discounts,
         ]);
     }
 
     public function create()
     {
         return inertia('Discounts/Create', [
-            'users' => User::all(['id', 'company_name', 'full_name'])
+            'users' => User::all(['id', 'company_name', 'full_name']),
         ]);
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'tire_type' => 'required|string|max:255',
+            'scope' => 'required|in:app_wide,per_user',
+            'user_id' => 'required_if:scope,per_user|nullable|exists:users,id',
+            'tire_kategorija' => 'required|string|max:255',
             'percentage' => 'required|numeric|min:0|max:100',
         ]);
 
+        // Ako je app-wide, postavi user_id na null
+        if ($data['scope'] === 'app_wide') {
+            $data['user_id'] = null;
+        }
+
         Discount::create($data);
 
-        return redirect()->route('discounts.index')->with('success', 'Popust kreiran.');
+        return back()->with('success', 'Popust je uspešno kreiran.');
     }
 
     public function edit(Discount $discount)
     {
         return inertia('Discounts/Edit', [
             'discount' => $discount,
-            'users' => User::all(['id', 'company_name', 'full_name'])
+            'users' => User::all(['id', 'company_name', 'full_name']),
         ]);
     }
 
     public function update(Request $request, Discount $discount)
     {
         $data = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'tire_type' => 'required|string|max:255',
+            'scope' => 'required|in:app_wide,per_user',
+            'user_id' => 'required_if:scope,per_user|nullable|exists:users,id',
+            'tire_kategorija' => 'required|string|max:255',
             'percentage' => 'required|numeric|min:0|max:100',
         ]);
 
+        // Ako je app-wide, postavi user_id na null
+        if ($data['scope'] === 'app_wide') {
+            $data['user_id'] = null;
+        }
+
         $discount->update($data);
 
-        return redirect()->route('discounts.index')->with('success', 'Popust ažuriran.');
+        return back()->with('success', 'Popust je uspešno ažuriran.');
     }
 
     public function destroy(Discount $discount)
     {
         $discount->delete();
 
-        return redirect()->route('discounts.index')->with('success', 'Popust obrisan.');
+        return back()->with('success', 'Popust je uspešno obrisan.');
     }
 }
