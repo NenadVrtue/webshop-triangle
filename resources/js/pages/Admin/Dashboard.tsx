@@ -13,8 +13,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { DataTable } from '@/components/table/data-table';
+import { SimpleDataTable } from '@/components/table/simple-data-table';
 import { ColumnDef } from '@tanstack/react-table';
 import { formatCurrency } from '@/lib/utils';
+import { MultiSelect, MultiSelectOption } from '@/components/ui/multi-select';
 import {
     Users,
     ShoppingCart,
@@ -158,8 +160,8 @@ interface PromoCodeFormData {
 }
 interface DiscountFormData {
     scope: 'app_wide' | 'per_user';
-    user_id: string;
-    tire_kategorija: string;
+    user_ids: string[]; // Changed to array for multi-select
+    tire_kategorije: string[]; // Changed to array for multi-select
     percentage: string;
 }
 
@@ -279,6 +281,121 @@ export function ExpandableImeCell({ naziv }: { naziv: string }) {
         </div>
     );
 }
+
+const createUserColumns = (
+    openEditUserModal: (user: User) => void,
+    handleDeleteUser: (user: User) => void,
+    roleOptions: { value: number; label: string }[]
+): ColumnDef<User>[] => [
+        {
+            accessorKey: "full_name",
+            header: "Ime",
+            cell: ({ row }) => (
+                <div className="font-medium">{row.getValue("full_name")}</div>
+            ),
+        },
+        {
+            accessorKey: "email",
+            header: "Email",
+            cell: ({ row }) => (
+                <div className="flex items-center gap-1">
+                    <Mail className="h-3 w-3 text-muted-foreground" />
+                    {row.getValue("email")}
+                </div>
+            ),
+        },
+        {
+            accessorKey: "company_name",
+            header: "Kompanija",
+            cell: ({ row }) => {
+                const companyName = row.getValue("company_name") as string | undefined;
+                return companyName ? (
+                    <div className="flex items-center gap-1">
+                        <Building className="h-3 w-3 text-muted-foreground" />
+                        {companyName}
+                    </div>
+                ) : null;
+            },
+        },
+        {
+            accessorKey: "phone",
+            header: "Telefon",
+            cell: ({ row }) => {
+                const phone = row.getValue("phone") as string | undefined;
+                return phone ? (
+                    <div className="flex items-center gap-1">
+                        <Phone className="h-3 w-3 text-muted-foreground" />
+                        {phone}
+                    </div>
+                ) : null;
+            },
+        },
+        {
+            accessorKey: "jib",
+            header: "JIB",
+        },
+        {
+            accessorKey: "role",
+            header: "Uloga",
+            cell: ({ row }) => {
+                const role = row.getValue("role") as number;
+                return (
+                    <Badge variant={role === 1 ? 'default' : 'secondary'}>
+                        {roleOptions.find(r => r.value === role)?.label || role}
+                    </Badge>
+                );
+            },
+        },
+        {
+            accessorKey: "is_active",
+            header: "Status",
+            cell: ({ row }) => {
+                const isActive = row.getValue("is_active") as boolean;
+                return (
+                    <Badge variant={isActive ? 'default' : 'destructive'}>
+                        {isActive ? 'Aktivan' : 'Neaktivan'}
+                    </Badge>
+                );
+            },
+        },
+        {
+            accessorKey: "orders_count",
+            header: "Narudžbe",
+            cell: ({ row }) => (
+                <Badge variant="outline">
+                    {row.getValue("orders_count")}
+                </Badge>
+            ),
+        },
+        {
+            accessorKey: "created_at",
+            header: "Registrovan",
+            cell: ({ row }) => formatDate(row.getValue("created_at")),
+        },
+        {
+            id: "actions",
+            header: "Akcije",
+            cell: ({ row }) => (
+                <div className="flex items-center gap-2">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditUserModal(row.original)}
+                    >
+                        <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteUser(row.original)}
+                        className="text-destructive hover:text-destructive"
+                    >
+                        <Trash2 className="h-3 w-3" />
+                    </Button>
+                </div>
+            ),
+        },
+    ];
 
 const createAdminTireColumns = (
     updatingTire: number | null,
@@ -564,10 +681,12 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
     const [discountToDelete, setDiscountToDelete] = useState<Discount | null>(null);
     const [discountFormData, setDiscountFormData] = useState<DiscountFormData>({
         scope: 'per_user',
-        user_id: '',
-        tire_kategorija: '',
+        user_ids: [],
+        tire_kategorije: [],
         percentage: '',
     });
+    const [isCreatingDiscounts, setIsCreatingDiscounts] = useState(false);
+    const [discountCreationProgress, setDiscountCreationProgress] = useState({ current: 0, total: 0 });
 
     const roleOptions = [
         { value: 0, label: 'Korisnik' },
@@ -892,8 +1011,8 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
         setEditingDiscount(discount);
         setDiscountFormData({
             scope: discount.scope,
-            user_id: discount.user_id?.toString() || '',
-            tire_kategorija: discount.tire_kategorija,
+            user_ids: discount.user_id ? [discount.user_id.toString()] : [],
+            tire_kategorije: [discount.tire_kategorija],
             percentage: discount.percentage.toString(),
         });
         setShowDiscountModal(true);
@@ -903,8 +1022,8 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
         setEditingDiscount(null);
         setDiscountFormData({
             scope: 'per_user',
-            user_id: '',
-            tire_kategorija: '',
+            user_ids: [],
+            tire_kategorije: [],
             percentage: '',
         });
         setShowDiscountModal(true);
@@ -931,16 +1050,16 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
         }
     };
 
-    const handleDiscountFormChange = (field: keyof DiscountFormData, value: string) => {
+    const handleDiscountFormChange = (field: keyof DiscountFormData, value: string | string[]) => {
         setDiscountFormData(prev => {
             const updated = {
                 ...prev,
                 [field]: value
             };
 
-            // Clear user_id when scope changes to app_wide
+            // Clear user_ids when scope changes to app_wide
             if (field === 'scope' && value === 'app_wide') {
-                updated.user_id = '';
+                updated.user_ids = [];
             }
 
             return updated;
@@ -951,14 +1070,17 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
         e.preventDefault();
 
         try {
-            const submitData = {
-                scope: discountFormData.scope,
-                user_id: discountFormData.scope === 'per_user' ? parseInt(discountFormData.user_id) : null,
-                tire_kategorija: discountFormData.tire_kategorija,
-                percentage: parseFloat(discountFormData.percentage)
-            };
-
             if (editingDiscount) {
+                // When editing, only update single discount with first selected values
+                const submitData = {
+                    scope: discountFormData.scope,
+                    user_id: discountFormData.scope === 'per_user' && discountFormData.user_ids.length > 0
+                        ? parseInt(discountFormData.user_ids[0])
+                        : null,
+                    tire_kategorija: discountFormData.tire_kategorije[0] || '',
+                    percentage: parseFloat(discountFormData.percentage)
+                };
+
                 router.patch(`/discounts/${editingDiscount.id}`, submitData, {
                     onSuccess: () => {
                         toast.success('Popust je uspešno ažuriran');
@@ -976,26 +1098,81 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
                     }
                 });
             } else {
-                router.post('/discounts', submitData, {
-                    onSuccess: () => {
-                        toast.success('Popust je uspešno kreiran');
-                        setShowDiscountModal(false);
-                    },
-                    onError: (errors) => {
-                        console.error('Validation errors:', errors);
-                        Object.entries(errors).forEach(([field, messages]) => {
-                            if (Array.isArray(messages)) {
-                                messages.forEach(message => toast.error(`${field}: ${message}`));
-                            } else {
-                                toast.error(`${field}: ${messages}`);
-                            }
+                // When creating, generate all combinations
+                setIsCreatingDiscounts(true);
+
+                const combinations: Array<{ user_id: number | null; tire_kategorija: string }> = [];
+
+                if (discountFormData.scope === 'per_user') {
+                    // For per_user: create combinations of users × categories
+                    discountFormData.user_ids.forEach(userId => {
+                        discountFormData.tire_kategorije.forEach(kategorija => {
+                            combinations.push({
+                                user_id: parseInt(userId),
+                                tire_kategorija: kategorija
+                            });
                         });
+                    });
+                } else {
+                    // For app_wide: create one discount per category
+                    discountFormData.tire_kategorije.forEach(kategorija => {
+                        combinations.push({
+                            user_id: null,
+                            tire_kategorija: kategorija
+                        });
+                    });
+                }
+
+                setDiscountCreationProgress({ current: 0, total: combinations.length });
+
+                let successCount = 0;
+                let errorCount = 0;
+
+                for (let i = 0; i < combinations.length; i++) {
+                    const combination = combinations[i];
+                    const submitData = {
+                        scope: discountFormData.scope,
+                        user_id: combination.user_id,
+                        tire_kategorija: combination.tire_kategorija,
+                        percentage: parseFloat(discountFormData.percentage)
+                    };
+
+                    try {
+                        await new Promise<void>((resolve, reject) => {
+                            router.post('/discounts', submitData, {
+                                onSuccess: () => {
+                                    successCount++;
+                                    setDiscountCreationProgress({ current: i + 1, total: combinations.length });
+                                    resolve();
+                                },
+                                onError: (errors) => {
+                                    console.error('Validation errors:', errors);
+                                    errorCount++;
+                                    reject(errors);
+                                },
+                                preserveState: true,
+                                preserveScroll: true,
+                            });
+                        });
+                    } catch (error) {
+                        // Continue with next combination even if one fails
+                        console.error('Error creating discount:', error);
                     }
-                });
+                }
+
+                setIsCreatingDiscounts(false);
+                setShowDiscountModal(false);
+
+                if (successCount > 0) {
+                    toast.success(`Uspešno kreirano ${successCount} popusta${errorCount > 0 ? ` (${errorCount} neuspešno)` : ''}`);
+                } else {
+                    toast.error('Greška pri kreiranju popusta');
+                }
             }
         } catch (error) {
             console.error('Error submitting discount:', error);
             toast.error('Došlo je do greške');
+            setIsCreatingDiscounts(false);
         }
     };
 
@@ -1010,6 +1187,7 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
         { value: 'cancelled', label: 'Otkazana' },
     ];
 
+    const userColumns = createUserColumns(openEditUserModal, handleDeleteUser, roleOptions);
     const adminTireColumns = createAdminTireColumns(updatingTire, handleToggleActive);
     const adminPromoCodeColumns = createAdminPromoCodeColumns(handleEditPromoCode, handleDeletePromoCode);
 
@@ -1111,94 +1289,14 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Ime</TableHead>
-                                        <TableHead>Email</TableHead>
-                                        <TableHead>Kompanija</TableHead>
-                                        <TableHead>Telefon</TableHead>
-                                        <TableHead>JIB</TableHead>
-                                        <TableHead>Uloga</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Narudžbe</TableHead>
-                                        <TableHead>Registrovan</TableHead>
-                                        <TableHead>Akcije</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {users.map((user) => (
-                                        <TableRow key={user.id}>
-                                            <TableCell className="font-medium">
-                                                {user.full_name}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-1">
-                                                    <Mail className="h-3 w-3 text-muted-foreground" />
-                                                    {user.email}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>
-                                                {user.company_name && (
-                                                    <div className="flex items-center gap-1">
-                                                        <Building className="h-3 w-3 text-muted-foreground" />
-                                                        {user.company_name}
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>
-                                                {user.phone && (
-                                                    <div className="flex items-center gap-1">
-                                                        <Phone className="h-3 w-3 text-muted-foreground" />
-                                                        {user.phone}
-                                                    </div>
-                                                )}
-                                            </TableCell>
-                                            <TableCell>{user.jib}</TableCell>
-                                            <TableCell>
-                                                <Badge variant={user.role === 1 ? 'default' : 'secondary'}>
-                                                    {roleOptions.find(r => r.value === user.role)?.label || user.role}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant={user.is_active ? 'default' : 'destructive'}>
-                                                    {user.is_active ? 'Aktivan' : 'Neaktivan'}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                <Badge variant="outline">
-                                                    {user.orders_count}
-                                                </Badge>
-                                            </TableCell>
-                                            <TableCell>
-                                                {formatDate(user.created_at)}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex items-center gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => openEditUserModal(user)}
-                                                    >
-                                                        <Edit className="h-3 w-3" />
-                                                    </Button>
-
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => handleDeleteUser(user)}
-                                                        className="text-destructive hover:text-destructive"
-                                                    >
-                                                        <Trash2 className="h-3 w-3" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </div>
+                        <SimpleDataTable
+                            columns={userColumns}
+                            data={users}
+                            searchFields={[
+                                { key: "full_name", placeholder: "Pretraži po imenu..." },
+                                { key: "company_name", placeholder: "Pretraži po kompaniji..." },
+                            ]}
+                        />
                     </CardContent>
                 </Card>
 
@@ -1857,6 +1955,7 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
                             <Select
                                 value={discountFormData.scope}
                                 onValueChange={(value) => handleDiscountFormChange('scope', value)}
+                                disabled={editingDiscount !== null}
                             >
                                 <SelectTrigger>
                                     <SelectValue placeholder="Izaberite tip popusta" />
@@ -1870,42 +1969,65 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
 
                         {discountFormData.scope === 'per_user' && (
                             <div className="space-y-2">
-                                <Label htmlFor="user_id">Korisnik *</Label>
-                                <Select
-                                    value={discountFormData.user_id}
-                                    onValueChange={(value) => handleDiscountFormChange('user_id', value)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Izaberite korisnika" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {users.map((user) => (
-                                            <SelectItem key={user.id} value={user.id.toString()}>
-                                                {user.full_name} {user.company_name ? `(${user.company_name})` : ''}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <Label htmlFor="user_ids">
+                                    Korisnici *
+                                    {!editingDiscount && discountFormData.user_ids.length > 0 && (
+                                        <span className="text-xs text-muted-foreground ml-2">
+                                            ({discountFormData.user_ids.length} izabrano)
+                                        </span>
+                                    )}
+                                </Label>
+                                {editingDiscount ? (
+                                    <Input
+                                        value={users.find(u => u.id.toString() === discountFormData.user_ids[0])?.full_name || ''}
+                                        disabled
+                                        className="bg-muted"
+                                    />
+                                ) : (
+                                    <MultiSelect
+                                        options={users.map(user => ({
+                                            value: user.id.toString(),
+                                            label: user.full_name,
+                                            description: user.company_name || undefined
+                                        }))}
+                                        selected={discountFormData.user_ids}
+                                        onChange={(selected) => handleDiscountFormChange('user_ids', selected)}
+                                        placeholder="Izaberite korisnike..."
+                                        searchPlaceholder="Pretraži korisnike..."
+                                        emptyText="Nema korisnika."
+                                    />
+                                )}
                             </div>
                         )}
 
                         <div className="space-y-2">
-                            <Label htmlFor="tire_kategorija">Kategorija guma *</Label>
-                            <Select
-                                value={discountFormData.tire_kategorija}
-                                onValueChange={(value) => handleDiscountFormChange('tire_kategorija', value)}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Izaberite kategoriju" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {tireKategorije.map((kategorija) => (
-                                        <SelectItem key={kategorija} value={kategorija as string}>
-                                            {kategorija}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Label htmlFor="tire_kategorije">
+                                Kategorija guma *
+                                {!editingDiscount && discountFormData.tire_kategorije.length > 0 && (
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                        ({discountFormData.tire_kategorije.length} izabrano)
+                                    </span>
+                                )}
+                            </Label>
+                            {editingDiscount ? (
+                                <Input
+                                    value={discountFormData.tire_kategorije[0] || ''}
+                                    disabled
+                                    className="bg-muted"
+                                />
+                            ) : (
+                                <MultiSelect
+                                    options={tireKategorije.map(kategorija => ({
+                                        value: kategorija as string,
+                                        label: kategorija as string
+                                    }))}
+                                    selected={discountFormData.tire_kategorije}
+                                    onChange={(selected) => handleDiscountFormChange('tire_kategorije', selected)}
+                                    placeholder="Izaberite kategorije..."
+                                    searchPlaceholder="Pretraži kategorije..."
+                                    emptyText="Nema kategorija."
+                                />
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -1923,16 +2045,40 @@ export default function AdminDashboard({ users, orders, tires = [], promoCodes =
                             />
                         </div>
 
+                        {!editingDiscount && discountFormData.user_ids.length > 0 && discountFormData.tire_kategorije.length > 0 && (
+                            <div className="rounded-md bg-muted p-3 text-sm">
+                                <p className="font-medium mb-1">Broj popusta koji će biti kreirani:</p>
+                                <p className="text-muted-foreground">
+                                    {discountFormData.scope === 'per_user'
+                                        ? `${discountFormData.user_ids.length} korisnika × ${discountFormData.tire_kategorije.length} kategorija = ${discountFormData.user_ids.length * discountFormData.tire_kategorije.length} popusta`
+                                        : `${discountFormData.tire_kategorije.length} kategorija = ${discountFormData.tire_kategorije.length} popusta`
+                                    }
+                                </p>
+                            </div>
+                        )}
+
+                        {isCreatingDiscounts && (
+                            <div className="rounded-md bg-muted p-3 text-sm">
+                                <p className="font-medium mb-1">Kreiranje popusta...</p>
+                                <p className="text-muted-foreground">
+                                    {discountCreationProgress.current} od {discountCreationProgress.total}
+                                </p>
+                            </div>
+                        )}
+
                         <DialogFooter>
                             <Button
                                 type="button"
                                 variant="outline"
                                 onClick={() => setShowDiscountModal(false)}
+                                disabled={isCreatingDiscounts}
                             >
                                 Otkaži
                             </Button>
-                            <Button type="submit">
-                                {editingDiscount ? 'Ažuriraj' : 'Kreiraj'}
+                            <Button type="submit" disabled={isCreatingDiscounts}>
+                                {isCreatingDiscounts
+                                    ? 'Kreiranje...'
+                                    : editingDiscount ? 'Ažuriraj' : 'Kreiraj'}
                             </Button>
                         </DialogFooter>
                     </form>
