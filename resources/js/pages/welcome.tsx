@@ -88,7 +88,7 @@ export default function Welcome() {
                                 </>
                             )}
                         </div>
-                        <div className="flex flex-col bg-background-dark p-10 text-lg lg:mb-0 lg:-ml-px dark:bg-sidebar dark:text-white">
+                        <div className="flex flex-col bg-background-dark p-10 text-lg text-white lg:mb-0 lg:-ml-px dark:bg-sidebar">
                             <h2 className="mb-4 text-2xl font-bold">Postanite naš poslovni partner!</h2>
                             <p className="mb-4">
                                 <span className="font-bold">Triangle</span> web shop za pravna lica omogućava jednostavnu i brzu online kupovinu guma
