@@ -26,7 +26,6 @@ export function useCart() {
                     addedAt: new Date(item.addedAt)
                 }));
                 setCart(cartWithDates);
-                console.log('Cart loaded from localStorage:', cartWithDates);
             }
         } catch (error) {
             console.error('Error loading cart from localStorage:', error);
@@ -40,7 +39,6 @@ export function useCart() {
         if (isLoaded) {
             try {
                 localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
-                console.log('Cart saved to localStorage:', cart);
             } catch (error) {
                 console.error('Error saving cart to localStorage:', error);
             }
@@ -59,7 +57,6 @@ export function useCart() {
                         ? { ...item, quantity: item.quantity + quantity }
                         : item
                 );
-                console.log('Updated existing item in cart:', updatedCart);
 
                 // Show toast for quantity update
                 toast.success(
@@ -79,7 +76,6 @@ export function useCart() {
                     addedAt: new Date()
                 };
                 const updatedCart = [...prevCart, newItem];
-                console.log('Added new item to cart:', updatedCart);
 
                 // Show toast for new item
                 toast.success(
@@ -96,11 +92,7 @@ export function useCart() {
 
     // Remove item from cart
     const removeFromCart = (itemId: string) => {
-        setCart(prevCart => {
-            const updatedCart = prevCart.filter(item => item.id !== itemId);
-            console.log('Removed item from cart:', updatedCart);
-            return updatedCart;
-        });
+        setCart(prevCart => prevCart.filter(item => item.id !== itemId));
     };
 
     // Update item quantity
@@ -110,15 +102,9 @@ export function useCart() {
             return;
         }
 
-        setCart(prevCart => {
-            const updatedCart = prevCart.map(item =>
-                item.id === itemId
-                    ? { ...item, quantity }
-                    : item
-            );
-            console.log('Updated quantity in cart:', updatedCart);
-            return updatedCart;
-        });
+        setCart(prevCart => prevCart.map(item =>
+            item.id === itemId ? { ...item, quantity } : item
+        ));
     };
 
     // Check if tire is in cart
@@ -135,7 +121,6 @@ export function useCart() {
     // Clear entire cart
     const clearCart = () => {
         setCart([]);
-        console.log('Cart cleared');
     };
 
     // Calculate totals

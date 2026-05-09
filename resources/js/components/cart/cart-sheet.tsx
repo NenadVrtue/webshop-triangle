@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     Sheet,
     SheetContent,
@@ -65,23 +65,10 @@ export function CartSheet({
 
     const [editingQuantities, setEditingQuantities] = useState<{ [key: string]: string }>({});
 
-    // Debug cart state in sheet
-    useEffect(() => {
-        console.log('CartSheet: Cart state changed:', { cart, itemCount, totalQuantity, isLoaded });
-        console.log('CartSheet: Using props?', {
-            usingPropCart: !!propCart,
-            usingPropItemCount: !!propItemCount,
-            usingPropActions: !!propUpdateQuantity
-        });
-    }, [cart, itemCount, totalQuantity, isLoaded, propCart, propItemCount, propUpdateQuantity]);
-
     const handleQuantityChange = (itemId: string, newQuantity: number) => {
-        console.log('CartSheet: handleQuantityChange called:', { itemId, newQuantity });
         if (newQuantity <= 0) {
-            console.log('CartSheet: Removing item:', itemId);
             removeFromCart(itemId);
         } else {
-            console.log('CartSheet: Updating quantity:', itemId, 'to', newQuantity);
             updateQuantity(itemId, newQuantity);
         }
     };
@@ -102,7 +89,6 @@ export function CartSheet({
 
     const handleQuantityInputKeyPress = (itemId: string, value: string, e: React.KeyboardEvent) => {
         if (e.key === 'Enter') {
-            console.log('CartSheet: Enter pressed on input:', { itemId, value });
             handleQuantityInputBlur(itemId, value);
         }
     };
