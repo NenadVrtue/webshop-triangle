@@ -47,6 +47,10 @@ Route::middleware(['auth', 'verified', 'role:admin'])
     ->as('admin.')
     ->group(function () {
         Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/orders', [AdminDashboardController::class, 'orders'])->name('orders');
+        Route::get('/tires', [AdminDashboardController::class, 'tires'])->name('tires');
+        Route::get('/users', [AdminDashboardController::class, 'users'])->name('users');
+        Route::get('/discounts', [AdminDashboardController::class, 'discounts'])->name('discounts');
         Route::patch('/orders/{order}/status', [AdminDashboardController::class, 'updateOrderStatus'])->name('orders.update-status');
     });
 
