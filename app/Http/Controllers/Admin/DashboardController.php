@@ -233,10 +233,13 @@ class DashboardController extends Controller
             'company_name' => $u->company_name,
         ]);
 
+        $kategorije = Tire::distinct()->orderBy('kategorija')->pluck('kategorija')->filter()->values();
+
         return Inertia::render('Admin/Discounts', [
             'discounts' => $discounts,
             'promoCodes' => $promoCodes,
             'users' => $allUsers,
+            'kategorije' => $kategorije,
         ]);
     }
 

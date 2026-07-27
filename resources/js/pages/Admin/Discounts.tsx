@@ -43,6 +43,7 @@ interface Props {
     discounts: Discount[];
     promoCodes: PromoCode[];
     users: UserOption[];
+    kategorije: string[];
 }
 
 interface DiscountFormData {
@@ -58,9 +59,7 @@ interface PromoCodeFormData {
     expires_at: string;
 }
 
-const tireKategorije = ['Ljetne', 'Zimske', 'Cjelogodišnje', 'Teretne'];
-
-export default function AdminDiscounts({ discounts, promoCodes, users }: Props) {
+export default function AdminDiscounts({ discounts, promoCodes, users, kategorije }: Props) {
     // Discount state
     const [showDiscountModal, setShowDiscountModal] = useState(false);
     const [editingDiscount, setEditingDiscount] = useState<Discount | null>(null);
@@ -400,7 +399,7 @@ export default function AdminDiscounts({ discounts, promoCodes, users }: Props) 
                                 <Input value={discountFormData.tire_kategorije[0] || ''} disabled className="bg-muted" />
                             ) : (
                                 <MultiSelect
-                                    options={tireKategorije.map(k => ({ value: k, label: k }))}
+                                    options={kategorije.map(k => ({ value: k, label: k }))}
                                     selected={discountFormData.tire_kategorije}
                                     onChange={(selected) => handleDiscountFormChange('tire_kategorije', selected)}
                                     placeholder="Izaberite kategorije..."
